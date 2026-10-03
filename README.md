@@ -6,8 +6,8 @@ follows this flake's) and drives it. Scenarios change often; the Nexus changes
 rarely, so a new or edited scenario never invalidates the Rust build, and Flow
 moves forward here only when this repository updates its input.
 
-Pinned: `github:LiGoldragon/flow/636214e515f7c09d32ae614033224aa40944423f`
-(0.23.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
+Pinned: `github:LiGoldragon/flow/4ad596d466a45de56239c55d415474f8b35ab163`
+(0.24.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
 claim a FlowId), both following this flake's `nixpkgs`.
 
 Test unpushed Flow code with
@@ -41,7 +41,7 @@ directory tree is the flake's output tree.
 | `flow` | pure check | Flow (Nexus, `flow`, `flow-meta`) |
 | `flow-populated-store` | pure check | Flow |
 | `flow-claude` | semi-sandbox, gated | Flow, Claude Code on the cheapest model |
-| `flow-claude-hook` | semi-sandbox, gated | Flow, flow-hook, flow-id, fixture Herdr, Claude Code on the cheapest model |
+| `flow-claude-hook` | semi-sandbox, gated | Flow, flow-hook, flow-id, fixture Herdr, a private Herdr pane, Claude Code on the cheapest model |
 
 ### `flow` (pure)
 

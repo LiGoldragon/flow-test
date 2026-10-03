@@ -62,6 +62,7 @@ let
   hook = flake.lib.components.flow-hook.forSystem system;
   herdr = flake.lib.components.herdr-fixture.forSystem system;
   flowId = flake.lib.components.flow-id.forSystem system;
+  herdrCli = "${pkgs.herdr}/bin/herdr";
   settings = hook.settings {
     prefix = ''tee -a "$FLOW_HOOK_WITNESS/inputs.jsonl" | '';
     suffix = " 2>> \"$FLOW_HOOK_WITNESS/calls.tsv\"";
@@ -75,6 +76,7 @@ pkgs.writeShellApplication {
     pkgs.gawk
     pkgs.jq
     pkgs.systemd
+    pkgs.util-linux
   ];
 
   meta.description = "The Flow harness hook in a light-model Claude Code run, reporting to its own Flow Nexus (gated: needs FLOW_TEST_LIVE=1).";
@@ -99,7 +101,9 @@ pkgs.writeShellApplication {
     # A short root: sun_path holds 108 bytes.
     root="$(mktemp -d /tmp/fh-XXXXXXXX)"
     flowNexusPid=
-    trap 'if [ -n "$flowNexusPid" ]; then kill "$flowNexusPid" 2>/dev/null || true; wait "$flowNexusPid" 2>/dev/null || true; fi; rm -rf "$root"' EXIT
+    interactiveHerdrPid=
+    interactiveSession=
+    trap 'if [ -n "$flowNexusPid" ]; then kill "$flowNexusPid" 2>/dev/null || true; wait "$flowNexusPid" 2>/dev/null || true; fi; if [ -n "$interactiveHerdrPid" ]; then kill "$interactiveHerdrPid" 2>/dev/null || true; fi; if [ -n "$interactiveSession" ]; then ${herdrCli} --session "$interactiveSession" server stop 2>/dev/null || true; fi; rm -rf "$root"' EXIT
 
     # The caller's own pane must not name the sandbox's processes.
     unset FLOW_SOCKET FLOW_META_SOCKET FLOW_ID HERDR_ENV HERDR_SESSION HERDR_PANE_ID HERDR_TAB_ID \
@@ -111,6 +115,23 @@ pkgs.writeShellApplication {
       "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$TMPDIR" "$FLOW_HOOK_WITNESS" "$root/work"
     chmod 700 "$HOME" "$HOME/.claude"
     install -m 600 "$livingCredentials" "$HOME/${claude.credentials}"
+    # This is an installed, generated native Claude skill, not a copied
+    # setting or a prompt-shaped substitute.  The disposable HOME owns every
+    # other Claude path; the read-only link lets the first interactive user
+    # message resolve the current Curriculum projection.
+    ln -s /home/li/primary/.claude/skills "$HOME/.claude/skills"
+
+    # The interactive witness owns a separate Herdr server and configuration.
+    # It never points at the caller's session, socket, pane, or configuration.
+    mkdir -p "$XDG_CONFIG_HOME/herdr"
+    cat > "$XDG_CONFIG_HOME/herdr/config.toml" <<'HERDR_CONFIG'
+    [update]
+    version_check = false
+    manifest_check = false
+    [experimental]
+    allow_nested = true
+    HERDR_CONFIG
+    export HERDR_CONFIG_PATH="$XDG_CONFIG_HOME/herdr/config.toml"
 
     # The flow: a fresh FlowId and Claude session id, its pane the fixture's.
     flowId="$(od -An -N3 -tx1 /dev/urandom | tr -d ' \n')"
@@ -160,6 +181,42 @@ pkgs.writeShellApplication {
     check() {
       if [ "$2" = yes ]; then echo "green: $1"; else echo "red: $1"; red=1; fi
     }
+
+    # A real, private Herdr pane carries one interactive Claude turn. Its
+    # first user input is the native, user-only contact discipline, followed
+    # by the harmless environment request.  No later turn invokes a skill.
+    interactiveSession=flow-claude-hook-private
+    interactiveLog="$FLOW_HOOK_WITNESS/herdr.typescript"
+    setsid script -qfc "stty cols 160 rows 48; ${herdrCli} session attach $interactiveSession" "$interactiveLog" \
+      </dev/null >"$FLOW_HOOK_WITNESS/herdr-client.log" 2>&1 &
+    interactiveHerdrPid=$!
+    for attempt in $(seq 1 30); do
+      ${herdrCli} --session "$interactiveSession" pane list >"$FLOW_HOOK_WITNESS/panes.json" 2>/dev/null && break
+      sleep 1
+    done
+    interactivePane="$(jq -r '.result.panes[0].pane_id // empty' "$FLOW_HOOK_WITNESS/panes.json")"
+    test -n "$interactivePane" || { echo "private Herdr did not create a pane" >&2; exit 1; }
+    interactiveSessionId="$(cat /proc/sys/kernel/random/uuid)"
+    interactivePrompt="$root/interactive-first-user-turn.txt"
+    cat > "$interactivePrompt" <<'PROMPT'
+    /trial-contact-discipline
+
+    This is a disposable Flow witness. Use one harmless shell tool invocation to print exactly FLOW_ID, FLOW_DIRECTORY and FLOW_SOCKET, then reply exactly: witness complete.
+    PROMPT
+    ${herdrCli} --session "$interactiveSession" pane run "$interactivePane" \
+      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$flowId FLOW_DIRECTORY=$HOME/primary/flows/$flowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --dangerously-skip-permissions --max-turns 4 \"\$(< $interactivePrompt)\"" \
+      >"$FLOW_HOOK_WITNESS/interactive-launch.json"
+    ${herdrCli} --session "$interactiveSession" pane wait-output "$interactivePane" --match 'witness complete' --timeout 300000 \
+      >"$FLOW_HOOK_WITNESS/interactive-wait.json" || true
+    ${herdrCli} --session "$interactiveSession" pane read "$interactivePane" --source recent-unwrapped --lines 400 \
+      >"$FLOW_HOOK_WITNESS/interactive-pane.txt" || true
+    check "interactive Claude received its exact UUID" "$(grep -F "$interactiveSessionId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    check "interactive first user input names trial-contact-discipline" "$(grep -F '/trial-contact-discipline' "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    check "interactive first user input was delivered before witness work" "$(grep -F 'This is a disposable Flow witness.' "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    check "interactive Claude printed the three Flow environment values" "$(grep -F "FLOW_ID=$flowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_DIRECTORY=$HOME/primary/flows/$flowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_SOCKET=$nexusSocket" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    ${herdrCli} --session "$interactiveSession" server stop || true
+    kill "$interactiveHerdrPid" 2>/dev/null || true
+
     answers() {
       local name="$1" expected="$2" reply
       shift 2
