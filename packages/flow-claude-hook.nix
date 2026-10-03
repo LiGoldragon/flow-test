@@ -233,7 +233,8 @@ pkgs.writeShellApplication {
         elif request["method"] == "tools/list": result = {"tools":[{"name":"flow_environment","description":"Returns the three Flow witness environment values.","inputSchema":{"type":"object","properties":{},"additionalProperties":False}}]}
         elif request["method"] == "tools/call" and request.get("params", {}).get("name") == "flow_environment" and request.get("params", {}).get("arguments") == {}: result = {"content":[{"type":"text","text":values}]}
         else:
-            print(json.dumps({"jsonrpc":"2.0","id":request["id"],"error":{"code":-32602,"message":"flow-witness accepts only flow_environment with {}"}}), flush=True)
+            code = -32602 if request["method"] == "tools/call" else -32601
+            print(json.dumps({"jsonrpc":"2.0","id":request["id"],"error":{"code":code,"message":"flow-witness accepts only flow_environment with {}"}}), flush=True)
             continue
         print(json.dumps({"jsonrpc":"2.0","id":request["id"],"result":result}), flush=True)
     MCP
