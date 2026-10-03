@@ -206,7 +206,7 @@ pkgs.writeShellApplication {
     setsid script -qfc "stty cols 160 rows 48; ${herdrCli} session attach $interactiveSession" "$interactiveLog" \
       </dev/null >"$FLOW_HOOK_WITNESS/herdr-client.log" 2>&1 &
     interactiveHerdrPid=$!
-    for attempt in $(seq 1 30); do
+    for _ in $(seq 1 30); do
       ${herdrCli} --session "$interactiveSession" pane list >"$FLOW_HOOK_WITNESS/panes.json" 2>/dev/null && break
       sleep 1
     done
