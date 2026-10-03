@@ -231,8 +231,10 @@ pkgs.writeShellApplication {
         if "id" not in request: continue
         if request["method"] == "initialize": result = {"protocolVersion":"2025-03-26","capabilities":{"tools":{}},"serverInfo":{"name":"flow-witness","version":"1"}}
         elif request["method"] == "tools/list": result = {"tools":[{"name":"flow_environment","description":"Returns the three Flow witness environment values.","inputSchema":{"type":"object","properties":{},"additionalProperties":False}}]}
-        elif request["method"] == "tools/call": result = {"content":[{"type":"text","text":values}]}
-        else: result = {}
+        elif request["method"] == "tools/call" and request.get("params", {}).get("name") == "flow_environment" and request.get("params", {}).get("arguments") == {}: result = {"content":[{"type":"text","text":values}]}
+        else:
+            print(json.dumps({"jsonrpc":"2.0","id":request["id"],"error":{"code":-32602,"message":"flow-witness accepts only flow_environment with {}"}}), flush=True)
+            continue
         print(json.dumps({"jsonrpc":"2.0","id":request["id"],"result":result}), flush=True)
     MCP
     chmod 500 "$root/bin/flow-env-mcp"
@@ -256,10 +258,10 @@ pkgs.writeShellApplication {
     check "interactive UUID has Stop hook" "$(interactiveFired Stop)"
     interactiveReported() { awk -F '\t' -v e="$1" -v d="$2" '$1 == e && $2 == d && $3 == "0" && $4 == "Reported" { found = 1 } END { print (found ? "yes" : "no") }' "$FLOW_HOOK_WITNESS/calls.tsv"; }
     check "interactive SessionStart report was acknowledged" "$(interactiveReported SessionStart "Report.{ «$interactiveFlowId» Started }")"
-    check "interactive MCP PostToolUse report was acknowledged" "$(awk -F '\t' -v f="$interactiveFlowId" '$1 == "PostToolUse" && $2 ~ "Report.{ «" f "» ToolUsed." && $3 == "0" && $4 == "Reported" { found=1 } END { print (found ? "yes" : "no") }' "$FLOW_HOOK_WITNESS/calls.tsv")"
+    check "interactive MCP flow_environment report was acknowledged" "$(interactiveReported PostToolUse "Report.{ «$interactiveFlowId» ToolUsed.«mcp__flow-witness__flow_environment» }")"
     check "interactive Stop report was acknowledged" "$(interactiveReported Stop "Report.{ «$interactiveFlowId» Stopped }")"
     interactiveEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$interactiveFlowId" 2>&1)" || true
-    check "interactive UUID event order is Started, ToolUsed.Bash, Stopped" "$(case "$interactiveEvents" in "EventsRead.{ $interactiveFlowId [ Started "*"ToolUsed."*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
+    check "interactive UUID event order is Started, native MCP tool, Stopped" "$(case "$interactiveEvents" in "EventsRead.{ $interactiveFlowId [ Started "*"ToolUsed.mcp__flow-witness__flow_environment "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     ${herdrCli} --session "$interactiveSession" server stop || true
     kill "$interactiveHerdrPid" 2>/dev/null || true
 
