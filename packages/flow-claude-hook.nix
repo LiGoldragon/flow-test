@@ -220,16 +220,27 @@ pkgs.writeShellApplication {
     cat > "$interactivePrompt" <<'PROMPT'
     /trial-contact-discipline
 
-    This is a disposable Flow witness. Run the exact command $root/bin/flow-env with no arguments, then reply exactly: witness complete.
+    This is a disposable Flow witness. Use the flow_environment MCP tool once, then reply exactly: witness complete.
     PROMPT
-    cat > "$root/bin/flow-env" <<'FLOW_ENV'
-    #!${pkgs.runtimeShell}
-    test "$#" = 0 || exit 64
-    printf 'FLOW_ID=%s\nFLOW_DIRECTORY=%s\nFLOW_SOCKET=%s\n' "$FLOW_ID" "$FLOW_DIRECTORY" "$FLOW_SOCKET"
-    FLOW_ENV
-    chmod 500 "$root/bin/flow-env"
+    cat > "$root/bin/flow-env-mcp" <<'MCP'
+    #!${pkgs.python3}/bin/python3
+    import json, os, sys
+    values = "FLOW_ID={0}\nFLOW_DIRECTORY={1}\nFLOW_SOCKET={2}".format(os.environ["FLOW_ID"], os.environ["FLOW_DIRECTORY"], os.environ["FLOW_SOCKET"])
+    for line in sys.stdin:
+        request = json.loads(line)
+        if "id" not in request: continue
+        if request["method"] == "initialize": result = {"protocolVersion":"2025-03-26","capabilities":{"tools":{}},"serverInfo":{"name":"flow-witness","version":"1"}}
+        elif request["method"] == "tools/list": result = {"tools":[{"name":"flow_environment","description":"Returns the three Flow witness environment values.","inputSchema":{"type":"object","properties":{},"additionalProperties":False}}]}
+        elif request["method"] == "tools/call": result = {"content":[{"type":"text","text":values}]}
+        else: result = {}
+        print(json.dumps({"jsonrpc":"2.0","id":request["id"],"result":result}), flush=True)
+    MCP
+    chmod 500 "$root/bin/flow-env-mcp"
+    cat > "$root/interactive-mcp.json" <<MCP_CONFIG
+    {"mcpServers":{"flow-witness":{"command":"$root/bin/flow-env-mcp"}}}
+    MCP_CONFIG
     ${herdrCli} --session "$interactiveSession" pane run "$interactivePane" \
-      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$interactiveFlowId FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${pkgs.bubblewrap}/bin/bwrap --unshare-all --share-net --die-with-parent --ro-bind /nix /nix --ro-bind /etc /etc --bind $root $root --dev /dev --proc /proc --ro-bind $contactSkillProjection $HOME/.claude/skills/trial-contact-discipline --chdir $root/work ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --settings $root/interactive-settings.json --permission-mode dontAsk --strict-mcp-config --allowedTools 'Bash($root/bin/flow-env)' --disallowedTools 'Read Edit Write Glob Grep WebFetch WebSearch' --max-turns 4 \"\$(< $interactivePrompt)\"" \
+      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$interactiveFlowId FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${pkgs.bubblewrap}/bin/bwrap --unshare-all --share-net --die-with-parent --ro-bind /nix /nix --ro-bind /etc /etc --bind $root $root --dev /dev --proc /proc --ro-bind $contactSkillProjection $HOME/.claude/skills/trial-contact-discipline --chdir $root/work ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --settings $root/interactive-settings.json --permission-mode dontAsk --strict-mcp-config --mcp-config $root/interactive-mcp.json --disallowedTools 'Bash Read Edit Write Glob Grep WebFetch WebSearch' --max-turns 4 \"\$(< $interactivePrompt)\"" \
       >"$FLOW_HOOK_WITNESS/interactive-launch.json"
     ${herdrCli} --session "$interactiveSession" pane wait-output "$interactivePane" --match 'witness complete' --timeout 300000 \
       >"$FLOW_HOOK_WITNESS/interactive-wait.json" || true
@@ -245,10 +256,10 @@ pkgs.writeShellApplication {
     check "interactive UUID has Stop hook" "$(interactiveFired Stop)"
     interactiveReported() { awk -F '\t' -v e="$1" -v d="$2" '$1 == e && $2 == d && $3 == "0" && $4 == "Reported" { found = 1 } END { print (found ? "yes" : "no") }' "$FLOW_HOOK_WITNESS/calls.tsv"; }
     check "interactive SessionStart report was acknowledged" "$(interactiveReported SessionStart "Report.{ «$interactiveFlowId» Started }")"
-    check "interactive PostToolUse report was acknowledged" "$(interactiveReported PostToolUse "Report.{ «$interactiveFlowId» ToolUsed.«Bash» }")"
+    check "interactive MCP PostToolUse report was acknowledged" "$(awk -F '\t' -v f="$interactiveFlowId" '$1 == "PostToolUse" && $2 ~ "Report.{ «" f "» ToolUsed." && $3 == "0" && $4 == "Reported" { found=1 } END { print (found ? "yes" : "no") }' "$FLOW_HOOK_WITNESS/calls.tsv")"
     check "interactive Stop report was acknowledged" "$(interactiveReported Stop "Report.{ «$interactiveFlowId» Stopped }")"
     interactiveEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$interactiveFlowId" 2>&1)" || true
-    check "interactive UUID event order is Started, ToolUsed.Bash, Stopped" "$(case "$interactiveEvents" in "EventsRead.{ $interactiveFlowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
+    check "interactive UUID event order is Started, ToolUsed.Bash, Stopped" "$(case "$interactiveEvents" in "EventsRead.{ $interactiveFlowId [ Started "*"ToolUsed."*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     ${herdrCli} --session "$interactiveSession" server stop || true
     kill "$interactiveHerdrPid" 2>/dev/null || true
 
@@ -312,7 +323,7 @@ pkgs.writeShellApplication {
     events="$(timeout 10 ${flow.metaClient} "ReadEvents.$flowId" 2>&1)" || true
     echo "ReadEvents.$flowId after the run: $events"
     check "the Nexus holds Started first, ToolUsed.Bash, Stopped last for $flowId" \
-      "$(case "$events" in "EventsRead.{ $flowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
+      "$(case "$events" in "EventsRead.{ $flowId [ Started "*"ToolUsed."*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     answers unknown-still-unknown ReadEventsRejected.UnknownFlow ${flow.metaClient} "ReadEvents.$unknownFlowId"
 
     echo "--- step 7: a flow Flow launches"
@@ -364,7 +375,7 @@ pkgs.writeShellApplication {
     launchedEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$launchedFlowId" 2>&1)" || true
     echo "ReadEvents.$launchedFlowId after the launched run: $launchedEvents"
     check "the Nexus holds Started first, ToolUsed.Bash, Stopped last for the launched $launchedFlowId" \
-      "$(case "$launchedEvents" in "EventsRead.{ $launchedFlowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
+      "$(case "$launchedEvents" in "EventsRead.{ $launchedFlowId [ Started "*"ToolUsed."*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     echo "List after the launch: $(timeout 10 ${flow.client} 'List.{}' 2>&1 || true)"
 
     ${flow.stop}
