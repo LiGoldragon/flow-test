@@ -6,8 +6,8 @@ follows this flake's) and drives it. Scenarios change often; the Nexus changes
 rarely, so a new or edited scenario never invalidates the Rust build, and Flow
 moves forward here only when this repository updates its input.
 
-Pinned: `github:LiGoldragon/flow/2fa51db8d7931ba6d52eb29bf9cea88698cb4bf9`
-(0.22.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
+Pinned: `github:LiGoldragon/flow/636214e515f7c09d32ae614033224aa40944423f`
+(0.23.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
 claim a FlowId), both following this flake's `nixpkgs`.
 
 Test unpushed Flow code with

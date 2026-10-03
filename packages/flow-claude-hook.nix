@@ -11,7 +11,13 @@
 #   2. Copy only `~/.claude/.credentials.json` into the root's home; refuse
 #      when its access token expires within 15 minutes.
 #   3. Start a Flow Nexus on the root (fresh store, its own sockets) with the
-#      fixture Herdr first on its PATH, standing in for the flow's pane.
+#      fixture Herdr first on its PATH, standing in for the flow's pane. The
+#      Nexus runs in the next slot's layout: its runtime directory is
+#      `run/flow-next`, so it serves `run/flow-next/flow/flow.sock`, while
+#      the pane's shell and every harness have `run` as XDG_RUNTIME_DIR,
+#      where the default `run/flow/flow.sock` does not exist. Steps 4-6 name
+#      the Nexus's sockets to the clients and the hand-run harness
+#      (FLOW_SOCKET, FLOW_META_SOCKET), as a caller choosing a Nexus does.
 #   4. Make Flow hold the sandbox flow: claim a fresh FlowId for a fresh
 #      Claude session id (the claim marker under the source root's flows/),
 #      then meta `RegisterFlow` it at the fixture pane. Assert
@@ -25,7 +31,7 @@
 #      SessionStart, PostToolUse and Stop and each Report answered Reported;
 #      `ReadEvents.<id>` shows Started first, ToolUsed.Bash, Stopped last;
 #      the unknown FlowId is still unknown.
-#   7. A flow Flow launches (flow 0.22.0): the ordinary `Start` of a Claude
+#   7. A flow Flow launches (flow 0.22.0; its FLOW_SOCKET since 0.23.0): the ordinary `Start` of a Claude
 #      launch on the cheapest model, through the fixture Herdr's launch
 #      stages (lib/components/herdr-fixture.nix) and the real `flow-id`
 #      (lib/components/flow-id.nix). The fixture pane's shell inherited a
@@ -36,7 +42,10 @@
 #      like step 5. Witness: the FlowId Flow reserved is the claim of the
 #      session it passed; the harness's FLOW_ID is that FlowId, not the
 #      inherited one; the run's session is that session; `ReadEvents` of the
-#      FlowId shows Started first, ToolUsed.Bash, Stopped last. Where the
+#      FlowId shows Started first, ToolUsed.Bash, Stopped last: nothing but
+#      the launch itself told that harness where its Nexus is, so its
+#      FLOW_SOCKET is the Nexus's ordinary socket and the default stable
+#      path is still absent. Where the
 #      stand-in stops: it refuses the title `/rename`, so the Start answers
 #      `StartRejected.BindingRefused` at Title, after Bind and Register; no
 #      first prompt is typed into an interactive pane.
@@ -132,8 +141,20 @@ pkgs.writeShellApplication {
     printf 'flow-test launch source\n' > "$HOME/primary/launch-source.md"
     printf 'You are a sandbox flow. Do exactly what the prompt asks.\n' > "$HOME/primary/launch-system-prompt.md"
 
+    # The next slot's layout: the Nexus under run/flow-next, the pane's shell
+    # (the Herdr server's environment) under run, with no Flow socket there.
+    nexusRuntime="$root/run/flow-next"
+    stableSocket="$root/run/flow/flow.sock"
+    export FIXTURE_HERDR_RUNTIME_DIR="$root/run"
+    mkdir -p "$root/run"
+    chmod 700 "$root/run"
+
     PATH="${herdr.package}/bin:${flowId.bin}:$PATH"
+    XDG_RUNTIME_DIR="$nexusRuntime"
     ${flow.start}
+    XDG_RUNTIME_DIR="$root/run"
+    nexusSocket="$FLOW_SOCKET"
+    echo "flow-nexus serves $nexusSocket; the pane's runtime directory is $XDG_RUNTIME_DIR"
 
     red=0
     check() {
@@ -237,6 +258,15 @@ pkgs.writeShellApplication {
     check "the harness Flow launched exited 0" "$([ "$harnessExit" = 0 ] && echo yes || echo no)"
     check "the harness's FLOW_ID is the FlowId Flow reserved ($launchedFlowId), not the inherited 0c0c0c" \
       "$([ -n "$launchedFlowId" ] && [ "$harnessFlowId" = "$launchedFlowId" ] && echo yes || echo no)"
+    harnessSocket="$(sed -n 's/^FLOW_SOCKET=//p' "$FIXTURE_HERDR_STATE/harness-env" 2>/dev/null || true)"
+    harnessRuntime="$(sed -n 's/^XDG_RUNTIME_DIR=//p' "$FIXTURE_HERDR_STATE/harness-env" 2>/dev/null || true)"
+    echo "harness: FLOW_SOCKET $harnessSocket, XDG_RUNTIME_DIR $harnessRuntime"
+    check "the harness's runtime directory is the pane's ($root/run), not the Nexus's" \
+      "$([ "$harnessRuntime" = "$root/run" ] && echo yes || echo no)"
+    check "the default stable socket $stableSocket does not exist" \
+      "$([ ! -e "$stableSocket" ] && echo yes || echo no)"
+    check "the harness's FLOW_SOCKET is the socket of the Nexus that launched it ($nexusSocket)" \
+      "$([ "$harnessSocket" = "$nexusSocket" ] && echo yes || echo no)"
     check "the harness ran as the session Flow chose" \
       "$([ -n "$launchSession" ] && [ "$harnessSession" = "$launchSession" ] && echo yes || echo no)"
     launchedEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$launchedFlowId" 2>&1)" || true

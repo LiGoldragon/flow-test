@@ -17,8 +17,10 @@
 #   pane wait-output   answers the `--match` marker as seen in the pane
 #   agent start        starts the harness as Herdr would at that prompt: a
 #                      shell that inherited FIXTURE_HERDR_INHERITED_FLOW_ID
-#                      as FLOW_ID (the caller's identity a pane may carry)
-#                      runs the kept line, records its environment
+#                      as FLOW_ID (the caller's identity a pane may carry),
+#                      with the Herdr server's runtime directory
+#                      FIXTURE_HERDR_RUNTIME_DIR (else the caller's) as
+#                      XDG_RUNTIME_DIR and no FLOW_SOCKET, runs the kept line, records its environment
 #                      (`harness-env`), then execs FIXTURE_HERDR_HARNESS with
 #                      the agent arguments Flow passed, less
 #                      `--remote-control <name>` (interactive only). It runs
@@ -110,7 +112,8 @@
               printf '%s' "$session" > "$state/session"
               printf '%s\n' "$@" > "$state/harness-arguments"
               # shellcheck disable=SC2016
-              (cd "$(cat "$state/cwd")" && FLOW_ID="''${FIXTURE_HERDR_INHERITED_FLOW_ID:-}" \
+              (cd "$(cat "$state/cwd")" && env -u FLOW_SOCKET FLOW_ID="''${FIXTURE_HERDR_INHERITED_FLOW_ID:-}" \
+                XDG_RUNTIME_DIR="''${FIXTURE_HERDR_RUNTIME_DIR:-''${XDG_RUNTIME_DIR:-}}" \
                 sh -c 'eval "$(cat "$0/pane-run")" > "$0/pane-output" && env > "$0/harness-env" && "''${FIXTURE_HERDR_HARNESS:?}" "$@"; echo "$?" > "$0/harness.exit"' \
                 "$state" "$@" < /dev/null > "$state/harness.out" 2> "$state/harness.err" &
                 echo "$!" > "$state/harness.pid")
