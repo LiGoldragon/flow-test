@@ -91,6 +91,9 @@ pkgs.writeShellApplication {
     fi
 
     model="''${FLOW_TEST_MODEL:-${flake.lib.cheapestModel.claude}}"
+    contactSkillSource=/git/github.com/LiGoldragon/Curriculum/skills/trial-contact-discipline.md
+    contactSkillProjection=/home/li/primary/.claude/skills/trial-contact-discipline/SKILL.md
+    test "$(sha256sum "$contactSkillSource" | cut -d ' ' -f 1)" = '${contactSkillSourceHash}' && test "$(sha256sum "$contactSkillProjection" | cut -d ' ' -f 1)" = '${contactSkillProjectionHash}' || { echo "flow-claude-hook: contact-skill provenance mismatch" >&2; exit 2; }
     livingCredentials="$HOME/${claude.credentials}"
     # systemd-run reaches the living's user manager through these two; the
     # bounded scope then gets the sandbox's runtime directory back.
@@ -189,10 +192,7 @@ pkgs.writeShellApplication {
       check "$name answers $expected" "$([ "$reply" = "$expected" ] && echo yes || echo no)"
     }
 
-    contactSkillProjection=/home/li/primary/.claude/skills/trial-contact-discipline
-    contactSkillSource=/git/github.com/LiGoldragon/Curriculum/skills/trial-contact-discipline.md
-    check "contact skill source hash" "$(test "$(sha256sum "$contactSkillSource" | cut -d ' ' -f 1)" = '${contactSkillSourceHash}' && echo yes || echo no)"
-    check "contact skill projection hash" "$(test "$(sha256sum "$contactSkillProjection/SKILL.md" | cut -d ' ' -f 1)" = '${contactSkillProjectionHash}' && echo yes || echo no)"
+    contactSkillProjection="$(dirname "$contactSkillProjection")"
     cat > "$root/interactive-settings.json" <<'SETTINGS'
     ${settings}
     SETTINGS
@@ -220,10 +220,16 @@ pkgs.writeShellApplication {
     cat > "$interactivePrompt" <<'PROMPT'
     /trial-contact-discipline
 
-    This is a disposable Flow witness. Use one harmless shell tool invocation to print exactly FLOW_ID, FLOW_DIRECTORY and FLOW_SOCKET, then reply exactly: witness complete.
+    This is a disposable Flow witness. Run the exact command $root/bin/flow-env with no arguments, then reply exactly: witness complete.
     PROMPT
+    cat > "$root/bin/flow-env" <<'FLOW_ENV'
+    #!${pkgs.runtimeShell}
+    test "$#" = 0 || exit 64
+    printf 'FLOW_ID=%s\nFLOW_DIRECTORY=%s\nFLOW_SOCKET=%s\n' "$FLOW_ID" "$FLOW_DIRECTORY" "$FLOW_SOCKET"
+    FLOW_ENV
+    chmod 500 "$root/bin/flow-env"
     ${herdrCli} --session "$interactiveSession" pane run "$interactivePane" \
-      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$interactiveFlowId FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${pkgs.bubblewrap}/bin/bwrap --unshare-all --share-net --die-with-parent --ro-bind /nix /nix --ro-bind /etc /etc --bind $root $root --dev /dev --proc /proc --ro-bind $contactSkillProjection $HOME/.claude/skills/trial-contact-discipline --chdir $root/work ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --settings $root/interactive-settings.json --permission-mode dontAsk --strict-mcp-config --allowedTools 'Bash(echo:*)' --disallowedTools 'Read Edit Write Glob Grep WebFetch WebSearch' --max-turns 4 \"\$(< $interactivePrompt)\"" \
+      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$interactiveFlowId FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${pkgs.bubblewrap}/bin/bwrap --unshare-all --share-net --die-with-parent --ro-bind /nix /nix --ro-bind /etc /etc --bind $root $root --dev /dev --proc /proc --ro-bind $contactSkillProjection $HOME/.claude/skills/trial-contact-discipline --chdir $root/work ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --settings $root/interactive-settings.json --permission-mode dontAsk --strict-mcp-config --allowedTools 'Bash($root/bin/flow-env)' --disallowedTools 'Read Edit Write Glob Grep WebFetch WebSearch' --max-turns 4 \"\$(< $interactivePrompt)\"" \
       >"$FLOW_HOOK_WITNESS/interactive-launch.json"
     ${herdrCli} --session "$interactiveSession" pane wait-output "$interactivePane" --match 'witness complete' --timeout 300000 \
       >"$FLOW_HOOK_WITNESS/interactive-wait.json" || true
