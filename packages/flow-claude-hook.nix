@@ -25,6 +25,21 @@
 #      SessionStart, PostToolUse and Stop and each Report answered Reported;
 #      `ReadEvents.<id>` shows Started first, ToolUsed.Bash, Stopped last;
 #      the unknown FlowId is still unknown.
+#   7. A flow Flow launches (flow 0.22.0): the ordinary `Start` of a Claude
+#      launch on the cheapest model, through the fixture Herdr's launch
+#      stages (lib/components/herdr-fixture.nix) and the real `flow-id`
+#      (lib/components/flow-id.nix). The fixture pane's shell inherited a
+#      foreign FLOW_ID; it runs the line Flow typed, records the
+#      environment the harness gets, and runs Claude Code with the agent
+#      arguments Flow passed (Flow's own hook settings, `--session-id`, the
+#      launch's system prompt file), as `-p` with one probe prompt, bounded
+#      like step 5. Witness: the FlowId Flow reserved is the claim of the
+#      session it passed; the harness's FLOW_ID is that FlowId, not the
+#      inherited one; the run's session is that session; `ReadEvents` of the
+#      FlowId shows Started first, ToolUsed.Bash, Stopped last. Where the
+#      stand-in stops: it refuses the title `/rename`, so the Start answers
+#      `StartRejected.BindingRefused` at Title, after Bind and Register; no
+#      first prompt is typed into an interactive pane.
 #   Exit 0 only when every check holds; 1 otherwise.
 {
   pkgs,
@@ -37,6 +52,7 @@ let
   claude = flake.lib.components.claude.forSystem system;
   hook = flake.lib.components.flow-hook.forSystem system;
   herdr = flake.lib.components.herdr-fixture.forSystem system;
+  flowId = flake.lib.components.flow-id.forSystem system;
   settings = hook.settings {
     prefix = ''tee -a "$FLOW_HOOK_WITNESS/inputs.jsonl" | '';
     suffix = " 2>> \"$FLOW_HOOK_WITNESS/calls.tsv\"";
@@ -97,7 +113,26 @@ pkgs.writeShellApplication {
     unknownFlowId=0a0a0a
     [ "$flowId" != "$unknownFlowId" ] || unknownFlowId=0b0b0b
 
-    PATH="${herdr.package}/bin:$PATH"
+    # The launch stand-in (step 7): its state, the shell identity its pane
+    # inherited, and the harness it runs, bounded as step 5's run is.
+    launchProbe='Run exactly this with the Bash tool: echo flow-launch-probe. Then reply with the single word done.'
+    export FIXTURE_HERDR_STATE="$root/herdr" FIXTURE_HERDR_INHERITED_FLOW_ID=0c0c0c \
+      FIXTURE_HERDR_HARNESS="$root/bin/harness"
+    mkdir -p "$FIXTURE_HERDR_STATE" "$root/bin"
+    cat > "$FIXTURE_HERDR_HARNESS" <<HARNESS
+    #!${pkgs.runtimeShell}
+    exec env XDG_RUNTIME_DIR="$livingRuntime" DBUS_SESSION_BUS_ADDRESS="unix:path=$livingRuntime/bus" \\
+      ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G \\
+      env XDG_RUNTIME_DIR="$root/run" DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 \\
+        ENABLE_CLAUDEAI_MCP_SERVERS=false \\
+      ${pkgs.coreutils}/bin/timeout 300 ${claude.binary} "\$@" -p "$launchProbe" --strict-mcp-config --max-turns 4 \\
+        --output-format stream-json --verbose
+    HARNESS
+    chmod +x "$FIXTURE_HERDR_HARNESS"
+    printf 'flow-test launch source\n' > "$HOME/primary/launch-source.md"
+    printf 'You are a sandbox flow. Do exactly what the prompt asks.\n' > "$HOME/primary/launch-system-prompt.md"
+
+    PATH="${herdr.package}/bin:${flowId.bin}:$PATH"
     ${flow.start}
 
     red=0
@@ -166,6 +201,49 @@ pkgs.writeShellApplication {
     check "the Nexus holds Started first, ToolUsed.Bash, Stopped last for $flowId" \
       "$(case "$events" in "EventsRead.{ $flowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     answers unknown-still-unknown ReadEventsRejected.UnknownFlow ${flow.metaClient} "ReadEvents.$unknownFlowId"
+
+    echo "--- step 7: a flow Flow launches"
+    sourceSha="$(sha256sum "$HOME/primary/launch-source.md" | cut -d ' ' -f 1)"
+    start="Start.{ { flow-test-launch [ { launch-source.md $sourceSha } ] [] Field Low Claude $model low None [] $herdrSession $HOME/primary/launch-system-prompt.md «Run the probe.» } { 000000 sandbox-session sandbox-turn } }"
+    started="$(timeout 120 ${flow.client} "$start" 2>&1)" || true
+    echo "start: $started"
+    check "the Start stops where the stand-in stops (Title): StartRejected.BindingRefused" \
+      "$([ "$started" = StartRejected.BindingRefused ] && echo yes || echo no)"
+    launchSession="$(cat "$FIXTURE_HERDR_STATE/session" 2>/dev/null || true)"
+    # flow-id claims the shortest unclaimed prefix of the session's hex
+    # digits, six in a fresh root.
+    launchedFlowId="$(printf '%s' "$launchSession" | tr -d - | cut -c 1-6)"
+    echo "launched: session $launchSession, flow $launchedFlowId"
+    check "Flow passed a --session-id" "$([ -n "$launchSession" ] && echo yes || echo no)"
+    check "the flow-id claim of $launchedFlowId names that session" \
+      "$(grep -qx "identity=''${launchSession//-/}" "$HOME/primary/flows/.$launchedFlowId.flow-id" 2>/dev/null && echo yes || echo no)"
+    echo "--- the line Flow typed at the pane's prompt"
+    cat "$FIXTURE_HERDR_STATE/pane-run" 2>/dev/null || true
+    echo
+    harnessPid="$(cat "$FIXTURE_HERDR_STATE/harness.pid" 2>/dev/null || true)"
+    if [ -n "$harnessPid" ]; then
+      timeout 330 tail --pid="$harnessPid" -f /dev/null || true
+    fi
+    harnessExit="$(cat "$FIXTURE_HERDR_STATE/harness.exit" 2>/dev/null || true)"
+    harnessFlowId="$(sed -n 's/^FLOW_ID=//p' "$FIXTURE_HERDR_STATE/harness-env" 2>/dev/null || true)"
+    harnessSession="$(jq -r 'select(.type == "system" and .subtype == "init") | .session_id' "$FIXTURE_HERDR_STATE/harness.out" 2>/dev/null | head -n 1)"
+    echo "harness: exit $harnessExit, FLOW_ID $harnessFlowId, session $harnessSession"
+    if [ "$harnessExit" != 0 ]; then
+      echo "--- harness stderr"
+      tail -n 20 "$FIXTURE_HERDR_STATE/harness.err" 2>/dev/null || true
+      echo "--- harness stream tail"
+      tail -n 3 "$FIXTURE_HERDR_STATE/harness.out" 2>/dev/null || true
+    fi
+    check "the harness Flow launched exited 0" "$([ "$harnessExit" = 0 ] && echo yes || echo no)"
+    check "the harness's FLOW_ID is the FlowId Flow reserved ($launchedFlowId), not the inherited 0c0c0c" \
+      "$([ -n "$launchedFlowId" ] && [ "$harnessFlowId" = "$launchedFlowId" ] && echo yes || echo no)"
+    check "the harness ran as the session Flow chose" \
+      "$([ -n "$launchSession" ] && [ "$harnessSession" = "$launchSession" ] && echo yes || echo no)"
+    launchedEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$launchedFlowId" 2>&1)" || true
+    echo "ReadEvents.$launchedFlowId after the launched run: $launchedEvents"
+    check "the Nexus holds Started first, ToolUsed.Bash, Stopped last for the launched $launchedFlowId" \
+      "$(case "$launchedEvents" in "EventsRead.{ $launchedFlowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
+    echo "List after the launch: $(timeout 10 ${flow.client} 'List.{}' 2>&1 || true)"
 
     ${flow.stop}
     flowNexusPid=

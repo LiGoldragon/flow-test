@@ -8,6 +8,7 @@
     claude = import ./components/claude.nix { inherit inputs; };
     flow-hook = import ./components/flow-hook.nix { inherit inputs; };
     herdr-fixture = import ./components/herdr-fixture.nix { inherit inputs; };
+    flow-id = import ./components/flow-id.nix { inherit inputs; };
   };
 
   # The shared frame of a pure scenario: `flake.lib.scenario { pkgs, name }

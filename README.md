@@ -6,8 +6,9 @@ follows this flake's) and drives it. Scenarios change often; the Nexus changes
 rarely, so a new or edited scenario never invalidates the Rust build, and Flow
 moves forward here only when this repository updates its input.
 
-Pinned: `github:LiGoldragon/flow/4f3670ef75fef61e503d8e95f40f71da6b2fff5f`
-(0.19.0).
+Pinned: `github:LiGoldragon/flow/2fa51db8d7931ba6d52eb29bf9cea88698cb4bf9`
+(0.22.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
+claim a FlowId), both following this flake's `nixpkgs`.
 
 Test unpushed Flow code with
 `--override-input flow path:/git/github.com/LiGoldragon/flow`.
@@ -24,7 +25,12 @@ directory tree is the flake's output tree.
     lib/components/flow.nix            the Nexus and both clients: paths, configuration, start, stop
     checks/flow.nix                    pure scenario (a check)
     checks/flow-populated-store.nix    pure: restart on a populated store
+    lib/components/claude.nix          Claude Code from the pinned nixpkgs
+    lib/components/flow-hook.nix       flow-hook and the hook settings Flow writes
+    lib/components/flow-id.nix         flow-id from the pinned harness
+    lib/components/herdr-fixture.nix   a Herdr stand-in: snapshot, and the launch stages up to Title
     packages/flow-claude.nix           semi-sandbox runner (gated; the launch documented, not yet run)
+    packages/flow-claude-hook.nix      semi-sandbox runner (gated): the hook, hand-run and Flow-launched
     checks/lint.nix                    nixfmt --check, deadnix, statix
     formatter.nix                      pkgs.nixfmt
 
@@ -35,6 +41,7 @@ directory tree is the flake's output tree.
 | `flow` | pure check | Flow (Nexus, `flow`, `flow-meta`) |
 | `flow-populated-store` | pure check | Flow |
 | `flow-claude` | semi-sandbox, gated | Flow, Claude Code on the cheapest model |
+| `flow-claude-hook` | semi-sandbox, gated | Flow, flow-hook, flow-id, fixture Herdr, Claude Code on the cheapest model |
 
 ### `flow` (pure)
 
