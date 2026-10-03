@@ -63,6 +63,7 @@ let
   herdr = flake.lib.components.herdr-fixture.forSystem system;
   flowId = flake.lib.components.flow-id.forSystem system;
   herdrCli = "${pkgs.herdr}/bin/herdr";
+  contactSkillSourceHash = "a08c13abef2c932a0c57f14154bf17422fcec5064e9270a512deee70815857cf";
   contactSkillProjectionHash = "8b06a9b4054b13de2b86905207dcf4371212fba0e5d62e2b38232a1491aa5c7a";
   settings = hook.settings {
     prefix = ''tee -a "$FLOW_HOOK_WITNESS/inputs.jsonl" | '';
@@ -189,6 +190,8 @@ pkgs.writeShellApplication {
     }
 
     contactSkillProjection=/home/li/primary/.claude/skills/trial-contact-discipline
+    contactSkillSource=/git/github.com/LiGoldragon/Curriculum/skills/trial-contact-discipline.md
+    check "contact skill source hash" "$(test "$(sha256sum "$contactSkillSource" | cut -d ' ' -f 1)" = '${contactSkillSourceHash}' && echo yes || echo no)"
     check "contact skill projection hash" "$(test "$(sha256sum "$contactSkillProjection/SKILL.md" | cut -d ' ' -f 1)" = '${contactSkillProjectionHash}' && echo yes || echo no)"
     cat > "$root/interactive-settings.json" <<'SETTINGS'
     ${settings}
@@ -234,6 +237,12 @@ pkgs.writeShellApplication {
     check "interactive UUID has SessionStart hook" "$(interactiveFired SessionStart)"
     check "interactive UUID has PostToolUse hook" "$(interactiveFired PostToolUse)"
     check "interactive UUID has Stop hook" "$(interactiveFired Stop)"
+    interactiveReported() { awk -F '\t' -v e="$1" -v d="$2" '$1 == e && $2 == d && $3 == "0" && $4 == "Reported" { found = 1 } END { print (found ? "yes" : "no") }' "$FLOW_HOOK_WITNESS/calls.tsv"; }
+    check "interactive SessionStart report was acknowledged" "$(interactiveReported SessionStart "Report.{ «$interactiveFlowId» Started }")"
+    check "interactive PostToolUse report was acknowledged" "$(interactiveReported PostToolUse "Report.{ «$interactiveFlowId» ToolUsed.«Bash» }")"
+    check "interactive Stop report was acknowledged" "$(interactiveReported Stop "Report.{ «$interactiveFlowId» Stopped }")"
+    interactiveEvents="$(timeout 10 ${flow.metaClient} "ReadEvents.$interactiveFlowId" 2>&1)" || true
+    check "interactive UUID event order is Started, ToolUsed.Bash, Stopped" "$(case "$interactiveEvents" in "EventsRead.{ $interactiveFlowId [ Started "*"ToolUsed.Bash "*"Stopped ] }") echo yes ;; *) echo no ;; esac)"
     ${herdrCli} --session "$interactiveSession" server stop || true
     kill "$interactiveHerdrPid" 2>/dev/null || true
 
