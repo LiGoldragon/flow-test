@@ -6,8 +6,8 @@ follows this flake's) and drives it. Scenarios change often; the Nexus changes
 rarely, so a new or edited scenario never invalidates the Rust build, and Flow
 moves forward here only when this repository updates its input.
 
-Pinned: `github:LiGoldragon/flow/ae0502724c16c33bab523fc9ac800d53c5b48b87`
-(0.18.0).
+Pinned: `github:LiGoldragon/flow/4f3670ef75fef61e503d8e95f40f71da6b2fff5f`
+(0.19.0).
 
 Test unpushed Flow code with
 `--override-input flow path:/git/github.com/LiGoldragon/flow`.
