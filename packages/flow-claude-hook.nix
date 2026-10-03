@@ -63,6 +63,7 @@ let
   herdr = flake.lib.components.herdr-fixture.forSystem system;
   flowId = flake.lib.components.flow-id.forSystem system;
   herdrCli = "${pkgs.herdr}/bin/herdr";
+  contactSkillProjectionHash = "8b06a9b4054b13de2b86905207dcf4371212fba0e5d62e2b38232a1491aa5c7a";
   settings = hook.settings {
     prefix = ''tee -a "$FLOW_HOOK_WITNESS/inputs.jsonl" | '';
     suffix = " 2>> \"$FLOW_HOOK_WITNESS/calls.tsv\"";
@@ -77,6 +78,7 @@ pkgs.writeShellApplication {
     pkgs.jq
     pkgs.systemd
     pkgs.util-linux
+    pkgs.bubblewrap
   ];
 
   meta.description = "The Flow harness hook in a light-model Claude Code run, reporting to its own Flow Nexus (gated: needs FLOW_TEST_LIVE=1).";
@@ -115,11 +117,7 @@ pkgs.writeShellApplication {
       "$XDG_CACHE_HOME" "$XDG_DATA_HOME" "$TMPDIR" "$FLOW_HOOK_WITNESS" "$root/work"
     chmod 700 "$HOME" "$HOME/.claude"
     install -m 600 "$livingCredentials" "$HOME/${claude.credentials}"
-    # This is an installed, generated native Claude skill, not a copied
-    # setting or a prompt-shaped substitute.  The disposable HOME owns every
-    # other Claude path; the read-only link lets the first interactive user
-    # message resolve the current Curriculum projection.
-    ln -s /home/li/primary/.claude/skills "$HOME/.claude/skills"
+    mkdir -p "$HOME/.claude/skills/trial-contact-discipline"
 
     # The interactive witness owns a separate Herdr server and configuration.
     # It never points at the caller's session, socket, pane, or configuration.
@@ -182,6 +180,21 @@ pkgs.writeShellApplication {
       if [ "$2" = yes ]; then echo "green: $1"; else echo "red: $1"; red=1; fi
     }
 
+    answers() {
+      local name="$1" expected="$2" reply
+      shift 2
+      reply="$(timeout 10 "$@" 2>&1)" || true
+      echo "$name: $reply"
+      check "$name answers $expected" "$([ "$reply" = "$expected" ] && echo yes || echo no)"
+    }
+
+    contactSkillProjection=/home/li/primary/.claude/skills/trial-contact-discipline
+    check "contact skill projection hash" "$(test "$(sha256sum "$contactSkillProjection/SKILL.md" | cut -d ' ' -f 1)" = '${contactSkillProjectionHash}' && echo yes || echo no)"
+    cat > "$root/interactive-settings.json" <<'SETTINGS'
+    ${settings}
+    SETTINGS
+    touch "$FLOW_HOOK_WITNESS/inputs.jsonl" "$FLOW_HOOK_WITNESS/calls.tsv"
+
     # A real, private Herdr pane carries one interactive Claude turn. Its
     # first user input is the native, user-only contact discipline, followed
     # by the harmless environment request.  No later turn invokes a skill.
@@ -197,6 +210,9 @@ pkgs.writeShellApplication {
     interactivePane="$(jq -r '.result.panes[0].pane_id // empty' "$FLOW_HOOK_WITNESS/panes.json")"
     test -n "$interactivePane" || { echo "private Herdr did not create a pane" >&2; exit 1; }
     interactiveSessionId="$(cat /proc/sys/kernel/random/uuid)"
+    interactiveFlowId="$(od -An -N3 -tx1 /dev/urandom | tr -d ' \n')"
+    printf 'version=1\nharness=claude\nidentity=%s\nalias=%s\n' "''${interactiveSessionId//-/}" "$interactiveFlowId" > "$HOME/primary/flows/.$interactiveFlowId.flow-id"
+    answers interactive-register "FlowRegistered.{ $interactiveFlowId $interactiveSessionId Claude Unavailable Available.{ $herdrSession sandbox-claude $FIXTURE_HERDR_PANE $FIXTURE_HERDR_TERMINAL } { $interactiveFlowId $interactiveSessionId unavailable } Active }" ${flow.metaClient} "RegisterFlow.{ $interactiveFlowId $interactiveSessionId Claude Unavailable Available.{ $herdrSession sandbox-claude $FIXTURE_HERDR_PANE $FIXTURE_HERDR_TERMINAL } { $interactiveFlowId $interactiveSessionId unavailable } Active }"
     interactivePrompt="$root/interactive-first-user-turn.txt"
     cat > "$interactivePrompt" <<'PROMPT'
     /trial-contact-discipline
@@ -204,7 +220,7 @@ pkgs.writeShellApplication {
     This is a disposable Flow witness. Use one harmless shell tool invocation to print exactly FLOW_ID, FLOW_DIRECTORY and FLOW_SOCKET, then reply exactly: witness complete.
     PROMPT
     ${herdrCli} --session "$interactiveSession" pane run "$interactivePane" \
-      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$flowId FLOW_DIRECTORY=$HOME/primary/flows/$flowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --dangerously-skip-permissions --max-turns 4 \"\$(< $interactivePrompt)\"" \
+      "cd $root/work && exec env XDG_RUNTIME_DIR=$livingRuntime DBUS_SESSION_BUS_ADDRESS=unix:path=$livingRuntime/bus ${pkgs.systemd}/bin/systemd-run --user --scope --quiet -p MemoryMax=2G env XDG_RUNTIME_DIR=$root/run DBUS_SESSION_BUS_ADDRESS= DISABLE_AUTOUPDATER=1 DISABLE_NON_ESSENTIAL_MODEL_CALLS=1 ENABLE_CLAUDEAI_MCP_SERVERS=false FLOW_ID=$interactiveFlowId FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId FLOW_SOCKET=$nexusSocket ${pkgs.coreutils}/bin/timeout 300 ${pkgs.bubblewrap}/bin/bwrap --unshare-all --share-net --die-with-parent --ro-bind /nix /nix --ro-bind /etc /etc --bind $root $root --dev /dev --proc /proc --ro-bind $contactSkillProjection $HOME/.claude/skills/trial-contact-discipline --chdir $root/work ${claude.binary} --session-id $interactiveSessionId --model $model --effort low --remote-control --settings $root/interactive-settings.json --permission-mode dontAsk --strict-mcp-config --allowedTools 'Bash(echo:*)' --disallowedTools 'Read Edit Write Glob Grep WebFetch WebSearch' --max-turns 4 \"\$(< $interactivePrompt)\"" \
       >"$FLOW_HOOK_WITNESS/interactive-launch.json"
     ${herdrCli} --session "$interactiveSession" pane wait-output "$interactivePane" --match 'witness complete' --timeout 300000 \
       >"$FLOW_HOOK_WITNESS/interactive-wait.json" || true
@@ -213,7 +229,11 @@ pkgs.writeShellApplication {
     check "interactive Claude received its exact UUID" "$(grep -F "$interactiveSessionId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
     check "interactive first user input names trial-contact-discipline" "$(grep -F '/trial-contact-discipline' "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
     check "interactive first user input was delivered before witness work" "$(grep -F 'This is a disposable Flow witness.' "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
-    check "interactive Claude printed the three Flow environment values" "$(grep -F "FLOW_ID=$flowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_DIRECTORY=$HOME/primary/flows/$flowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_SOCKET=$nexusSocket" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    check "interactive Claude printed the three Flow environment values" "$(grep -F "FLOW_ID=$interactiveFlowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_DIRECTORY=$HOME/primary/flows/$interactiveFlowId" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && grep -F "FLOW_SOCKET=$nexusSocket" "$FLOW_HOOK_WITNESS/interactive-pane.txt" >/dev/null && echo yes || echo no)"
+    interactiveFired() { jq -e --arg e "$1" --arg s "$interactiveSessionId" 'select(.hook_event_name == $e and .session_id == $s)' "$FLOW_HOOK_WITNESS/inputs.jsonl" >/dev/null && echo yes || echo no; }
+    check "interactive UUID has SessionStart hook" "$(interactiveFired SessionStart)"
+    check "interactive UUID has PostToolUse hook" "$(interactiveFired PostToolUse)"
+    check "interactive UUID has Stop hook" "$(interactiveFired Stop)"
     ${herdrCli} --session "$interactiveSession" server stop || true
     kill "$interactiveHerdrPid" 2>/dev/null || true
 
