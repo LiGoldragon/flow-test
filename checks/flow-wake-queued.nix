@@ -13,10 +13,10 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    asleep("{ Mind wake Secondary }", "wake")
+    asleep_id = asleep("{ Mind wake Secondary }", "wake")
     expect("Wake with a Notice", flow("Wake.{ { Mind wake Secondary } Notice.ftWakeNotice }"), "Queued")
     expect("Wake with a Result", flow("Wake.{ { Mind wake Secondary } Result.ftWakeResult }"), "Queued")
     expect("Current after", flow("Current.{ Mind wake Secondary }"), "Current.Asleep")
-    expect("Metaflows", flow("Metaflows"), "Listed.[ { { Mind wake Secondary } Asleep [] [ Notice.ftWakeNotice Result.ftWakeResult ] } ]")
+    expect("Metaflows", flow("Metaflows"), f"Listed.[ {{ {{ Mind wake Secondary }} Asleep [ {asleep_id} ] [ Notice.ftWakeNotice Result.ftWakeResult ] }} ]")
   '';
 }

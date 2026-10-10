@@ -11,7 +11,8 @@ or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
 `NoneAbove`. The Lock is `{ Sender Address Until }`. Deliver is `Deliver.{ Lock Request }`,
 the sender inside the lock. A Key is the pair, `{ Vision flow }`, also in `Configure.Module.{ { Vision
-flow } { Repository Hash Path } false }` (Key, Source, Checked). A Model is
+flow } { Repository Hash Path } }`; the stored Module adds Checked, shown in
+Configuration. A Model is
 `{ Layer Harness Native }`, Harness one of meta-signal-flow's HarnessKind.
 Replies are compared in datom's canonical print. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
@@ -111,7 +112,7 @@ expected-failing:
 | flow-observe-agent-unknown | Observe.Agent | Refused.Unknown.FlowId |
 | flow-stop | Stop | Stopped; Current.Asleep |
 | flow-stop-unknown | Stop | Refused.Unknown.FlowId |
-| flow-metaflows | Metaflows | exact Listed, awake and asleep, in bind order |
+| flow-metaflows | Metaflows | exact Listed, awake and asleep (its FlowId in Past), in bind order |
 | flow-configuration-unconfigured | Configuration | Unconfigured before any Nexus |
 | flow-configuration | Configuration | exact Configuration: Nexus, Models, Thresholds, Module (false) |
 | flow-configure-nexus | Configure.Nexus | Configured, twice; disagreeing: Refused.Conflict |
@@ -121,6 +122,7 @@ expected-failing:
 | flow-configure-module | Configure.Module | Configured, twice; new hash: Configured |
 | flow-module-before-nexus | Configure.Module | recorded unchecked; Launch then Refused.HashMismatch |
 | flow-configure-nexus-no-binary | Configure.Nexus | MessageNexusBinary naming no file: Refused.NoSource.Path |
+| flow-store-full | Bind | the store's disk full: Refused.Store.String |
 | flow-configure-no-source | Configure.Module | Refused.NoSource.Path |
 | flow-configure-hash-mismatch | Configure.Module | Refused.HashMismatch, refused whole |
 | flow-forget | Forget | Forgotten; Launch then Refused.Unknown.Key |

@@ -146,7 +146,8 @@ def configuration_text(modules):
     return canonical(f"Configuration.{{ {nexus} [ {models} ] [ {thresholds} ] [ {' '.join(modules)} ] }}")
 
 
-# A Module as Flow prints it: { Key Source Checked }.
+# A Module as Flow stores and prints it: { Key Source Checked }, Checked
+# false until the module's first compose checks its hash.
 def module_text(digest, path="vision/flow.md", topic="flow", checked="false"):
     return f"{{ {{ Vision {topic} }} {{ psyche-skills {digest} {path} }} {checked} }}"
 
@@ -166,10 +167,10 @@ def module_hash(path="psyche-skills/vision/flow.md"):
     return rig(f"b3sum --no-names {SOURCE_ROOT}/{path}")
 
 
-# Configure.Module.{ Key Source Checked }, Checked false: the hash is checked
-# at the module's first compose. The file is SourceRoot/Repository/Path.
+# Configure.Module.{ Key Source }. The file is SourceRoot/Repository/Path;
+# Checked lives only in the stored record.
 def module_payload(digest, path="vision/flow.md", topic="flow"):
-    return f"Configure.Module.{module_text(digest, path, topic)}"
+    return f"Configure.Module.{{ {{ Vision {topic} }} {{ psyche-skills {digest} {path} }} }}"
 
 
 def open_pane(label):
@@ -209,8 +210,8 @@ def awake(address, label):
     return pane, pid, flow_id
 
 
-# An asleep metaflow: bound, then its pane closed. Flow's design names no
-# request that puts a metaflow to sleep, so the state is asserted.
+# An asleep metaflow: bound, then its pane closed; the closed pane moves
+# its FlowId into Past. The state is asserted.
 def asleep(address, label):
     pane, pid, flow_id = awake(address, label)
     close_pane(pane)
@@ -274,6 +275,10 @@ def lock_of(reply):
 # pid and start time, so the bound process is the one that connects.
 MESSAGE = "{ Field message Primary }"
 MESSAGE_RUNS = [0]
+# The FlowIds Message's metaflow was bound with, oldest first: each gated
+# request's process is bound anew, and when it exits the metaflow sleeps
+# and its FlowId moves into Past.
+MESSAGE_FLOWS = []
 
 
 # Bind as Message, made by message-helper (MessageNexusBinary) unless
@@ -291,7 +296,7 @@ def as_message(datom, binary="message-helper"):
     rig(f"(sh -c {shlex.quote(inner)} _ {shlex.quote(datom)} > {base}.reply 2>&1; echo $? > {base}.code) > /dev/null 2>&1 &")
     machine.wait_until_succeeds(f"test -s {base}.pid", timeout=30)
     pid = int(machine.succeed(f"cat {base}.pid").strip())
-    bind_message(pid)
+    MESSAGE_FLOWS.append(bind_message(pid)[len("Bound."):])
     machine.succeed(f"echo go > {base}.go")
     machine.wait_until_succeeds(f"test -s {base}.code", timeout=60)
     code = machine.succeed(f"cat {base}.code").strip()

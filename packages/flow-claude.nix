@@ -157,7 +157,7 @@ pkgs.writeShellApplication {
         expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"
       done
       digest="$(b3sum --no-names "$root/source/psyche-skills/vision/flow.md")"
-      expect "Configure.Module" Configured flow-meta "Configure.Module.{ { Vision flow } { psyche-skills $digest vision/flow.md } false }"
+      expect "Configure.Module" Configured flow-meta "Configure.Module.{ { Vision flow } { psyche-skills $digest vision/flow.md } }"
     }
 
     # Launch: Launched.FlowId; Current is Awake with it; the pane is titled
