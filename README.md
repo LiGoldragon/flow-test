@@ -5,7 +5,7 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-a5b2c27d4. The lock: `Lock.{ Sender Recipient }`,
+439dc64b4. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
