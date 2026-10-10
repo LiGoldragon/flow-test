@@ -18,7 +18,7 @@ let
 in
 pkgs.runCommand "report" { } ''
   {
-    echo "Written to Flow's design at Primary ${flake.lib.design} (flows/f5a6e9/reports/flow-buildable-design.md)."
+    echo "Written to Flow's design (flows/f5a6e9/reports/flow-buildable-design.md) at Primary ${flake.lib.design}."
     echo "Flow pinned at ${inputs.flow.rev}."
     echo
     echo "passing:"

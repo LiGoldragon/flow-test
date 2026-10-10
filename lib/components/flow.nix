@@ -1,7 +1,7 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
 # XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary 30e8efc4d).
+# design gives it (f5a6e9 flow-buildable-design at Primary 30e8efc4d plus rulings since).
 { inputs }:
 {
   forSystem = system: rec {
@@ -33,7 +33,7 @@
     startArgument = runtime: "Start.{ ${runtime}/${ordinarySocket} ${runtime}/${metaSocket} }";
 
     # Configure.Nexus.{ SourceRoot StableCodex NextCodex HarnessProfiles
-    # MetaAspects MessageNexusPath Lease }, with full values in the shapes
+    # MetaAspects MessageNexusPath MessageNexusBinary Lease }, with full values in the shapes
     # meta-signal-flow's ethos/signal.ethos declares at the revision Flow
     # 0.25.0 pins (88f3759):
     #   CodexEndpoint.{ ClientPath Home ControlSocketPath Vector<ModelName> }
@@ -42,12 +42,15 @@
     # The values are Flow 0.25.0's defaults. A string is bare unless it has a
     # space or a delimiter glyph, or begins or ends with . ! or :, so `!` is
     # written «!». Lease is a lock's span in
-    # seconds (60 until Configure.Nexus sets it).
+    # seconds (60 until Configure.Nexus sets it). MessageNexusBinary is the
+    # executable a Bind as Message must come from; the scenarios' Message
+    # stand-in binds with the `flow` client, so it names that binary.
     nexusPayload =
       {
         runtime,
         home,
         sourceRoot,
+        messageNexusBinary,
         lease,
       }:
       ''
@@ -64,6 +67,7 @@
                             { Codex [ / «!» ] [ esc ] [ ] } ]
                           [ Psyche Mind Field ]
                           ${runtime}/message/message.sock
+                          ${messageNexusBinary}
                           ${lease} }
       '';
   };

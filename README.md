@@ -5,7 +5,8 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-30e8efc4d. The lock: `Lock.{ Sender Recipient }`,
+30e8efc4d plus f5a6e9's rulings since (a Lock's Sender must be Awake; Bind as
+Message only from Configure.Nexus's MessageNexusBinary), until the fold lands. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -16,7 +17,8 @@ choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `Refused.Unknown.Address.{ Mind ghost Secondary }`. The Nexus starts as
 `flow-nexus 'Start.{ <ordinary socket> <meta socket> }'`. Configure.Nexus
 holds no socket paths, carries full CodexEndpoint and HarnessProfile values
-(meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>), and ends with `Lease`,
+(meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>),
+names MessageNexusBinary after MessageNexusPath, and ends with `Lease`,
 seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release are accepted only from the Message Nexus's own
 process: each runs in a fresh process bound (on the ordinary socket, which
 now carries Bind) as `{ Field message Primary }`, which then execs `flow`.
@@ -85,6 +87,8 @@ expected-failing:
 | flow-lock-unknown | Lock | Refused.Unknown.Address |
 | flow-lock-unknown-sender | Lock | Refused.Unknown.Address, the sender's address |
 | flow-lock-ended | Lock | Refused.Ended.Address |
+| flow-lock-asleep-sender | Lock | Sender Asleep: Refused.Asleep |
+| flow-lock-ended-sender | Lock | Sender Ended: Refused.Ended.Address |
 | flow-lock-off-route | Lock | Refused.OffRoute |
 | flow-lock-not-message | Lock | from a peer not Message: Refused.NotMessage |
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
@@ -119,6 +123,8 @@ expected-failing:
 | flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
 | flow-bind-taken | Bind | Refused.Taken.Address |
 | flow-bind-rebind | Bind | over a gone process: Bound; Current.Awake |
+| flow-bind-message-wrong-binary | Bind | as Message from another executable: Refused.NotMessage |
+| flow-bind-message-not-configured | Bind | as Message before Configure.Nexus: Refused.NotConfigured |
 | flow-bind-dead | Bind | Refused.Unidentified.Process, dead and reused pid |
 
 `flow-claude` (semi-sandbox, `FLOW_TEST_LIVE=1`, Claude on Haiku): Launch

@@ -240,6 +240,8 @@ def lock_of(reply):
 # in a fresh process that waits, is bound as Message (a Bind over a gone
 # process replaces it), and then execs `flow`, keeping its pid and start
 # time, so the bound process is the one that connects.
+# The Bind as Message is made by the `flow` client, the binary
+# Configure.Nexus names as MessageNexusBinary.
 MESSAGE = "{ Field message Primary }"
 MESSAGE_RUNS = [0]
 

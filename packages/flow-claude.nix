@@ -148,6 +148,7 @@ pkgs.writeShellApplication {
           runtime = "$XDG_RUNTIME_DIR";
           home = "$HOME";
           sourceRoot = "$root/source";
+          messageNexusBinary = flow.client;
           lease = "60";
         }
       }"

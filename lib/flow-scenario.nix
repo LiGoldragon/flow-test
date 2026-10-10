@@ -83,6 +83,7 @@ pkgs.testers.runNixOSTest {
       flow.nexusPayload {
         inherit runtime sourceRoot;
         home = "/home/alice";
+        messageNexusBinary = flow.client;
         lease = "LEASE";
       }
     }"""
