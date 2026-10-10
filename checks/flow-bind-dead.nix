@@ -17,8 +17,8 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     dead = int(machine.succeed("cat /tmp/dead").strip())
     gone = process(dead)
     machine.succeed(f"kill {dead}; while kill -0 {dead} 2>/dev/null; do sleep 0.1; done")
-    expect("Bind a dead process", meta(f"Bind.{{ {{ Mind nexus Secondary }} {gone} }}"), f"Refused.Unidentified.{gone}")
+    expect("Bind a dead process", flow(f"Bind.{{ {{ Mind nexus Secondary }} {gone} }}"), f"Refused.Unidentified.{gone}")
     reused = process(pid, started_of(pid) + 1)
-    expect("Bind a reused pid", meta(f"Bind.{{ {{ Mind nexus Secondary }} {reused} }}"), f"Refused.Unidentified.{reused}")
+    expect("Bind a reused pid", flow(f"Bind.{{ {{ Mind nexus Secondary }} {reused} }}"), f"Refused.Unidentified.{reused}")
   '';
 }

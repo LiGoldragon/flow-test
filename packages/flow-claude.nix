@@ -107,6 +107,36 @@ pkgs.writeShellApplication {
     firstPrompt() {
       jq -rs '[.[] | select(.type == "user")][0].message.content | if type == "string" then . else map(.text // "") | join("") end' "$1"
     }
+    # bindProcess <address> <pid>: Bind.{ Address { Pid Started } } on the
+    # ordinary socket.
+    bindProcess() {
+      started="$(cut -d' ' -f22 "/proc/$2/stat")"
+      bound="$(reply "Bind $1" flow "Bind.{ $1 { $2 $started } }")"
+      case "$bound" in Bound.*) ;; *) return 1 ;; esac
+    }
+    # A sender: a pane's shell bound under the address.
+    bindSender() {
+      pane="$(herdr workspace create --cwd "$HOME" --label sender --no-focus | jq -r .result.root_pane.pane_id)"
+      bindProcess "$1" "$(herdr pane process-info --pane "$pane" | jq -r .result.process_info.shell_pid)"
+    }
+    # asMessage <datom>: Lock, Deliver and Release are accepted only from the
+    # Message Nexus's own process. A fresh process waits, is bound as
+    # { Field message Primary }, then execs flow with the datom, keeping
+    # its pid and start time; prints the reply.
+    messages=0
+    asMessage() {
+      messages=$((messages + 1))
+      base="$root/message-$messages"
+      mkfifo "$base.go"
+      # shellcheck disable=SC2016
+      sh -c 'echo $$ > "$1.pid"; read -r _ < "$1.go"; exec flow "$2"' _ "$base" "$1" > "$base.reply" 2>&1 &
+      runner=$!
+      for _ in $(seq 1 100); do [ -s "$base.pid" ] && break; sleep 0.1; done
+      bindProcess '{ Field message Primary }' "$(cat "$base.pid")" >&2
+      echo go > "$base.go"
+      wait "$runner" || true
+      cat "$base.reply"
+    }
     launch() {
       launched="$(reply "Launch $1" flow "Launch.{ $1 [ { Vision flow } ] «$2» }")"
       case "$launched" in Launched.*) echo "''${launched#Launched.}" ;; *) return 1 ;; esac
@@ -173,25 +203,32 @@ pkgs.writeShellApplication {
 
     # Locked: a Lock while a refresh is under way is refused Locked.
     testRefreshLocked() {
+      bindSender '{ Psyche locked Secondary }'
       launch '{ Mind locked Secondary }' 'Reply ok, then stop.' > /dev/null
       flow 'Refresh.{ Mind locked Secondary }' > "$root/refresh-locked.reply" 2>&1 &
       sleep 1
-      expect "Lock during the refresh" Refused.Locked flow 'Lock.{ { Psyche locked Secondary } Address.{ Mind locked Secondary } }'
+      got="$(asMessage 'Lock.{ { Psyche locked Secondary } Address.{ Mind locked Secondary } }')"
+      echo "Lock during the refresh: «$got»"
+      [ "$got" = Refused.Locked ]
       wait
     }
 
     # A busy awake flow: a Deliver under the lock is Queued, then drained at
     # its next Stop; the transcript holds the Order exactly once.
     testDeliverBusy() {
+      bindSender '{ Psyche busy Secondary }'
       launch '{ Mind busy Secondary }' 'Run the shell command sleep 30, then reply done.' > /dev/null
       for _ in $(seq 1 600); do
         transcript="$(newestTranscript)"
         [ -n "$transcript" ] && grep -q '"tool_use"' "$transcript" && break
         sleep 0.5
       done
-      locked="$(reply Lock flow 'Lock.{ { Psyche busy Secondary } Address.{ Mind busy Secondary } }')"
+      locked="$(asMessage 'Lock.{ { Psyche busy Secondary } Address.{ Mind busy Secondary } }')"
+      echo "Lock: «$locked»"
       case "$locked" in Locked.*) ;; *) return 1 ;; esac
-      expect "Deliver to the busy flow" Queued flow "Deliver.{ ''${locked#Locked.} Order.«ftBusy reply received» }"
+      delivered="$(asMessage "Deliver.{ ''${locked#Locked.} Order.«ftBusy reply received» }")"
+      echo "Deliver to the busy flow: «$delivered»"
+      [ "$delivered" = Queued ]
       for _ in $(seq 1 1200); do grep -q ftBusy "$transcript" && break; sleep 0.5; done
       count="$(jq -s '[.[] | select(.type == "user") | tostring | select(test("ftBusy"))] | length' "$transcript")"
       echo "the transcript holds the Order $count times"

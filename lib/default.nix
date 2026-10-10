@@ -7,10 +7,10 @@
     herdr = import ./components/herdr.nix;
   };
 
-  # The Primary revision of Flow's design the scenarios are written to
-  # (flows/f5a6e9/reports/flow-buildable-design.md), with f5a6e9's later
-  # rulings given to this repository.
-  design = "7398a43ca";
+  # Flow's design the scenarios are written to
+  # (flows/f5a6e9/reports/flow-buildable-design.md): a Primary revision and
+  # the rulings given to this repository since.
+  design = "d849975ab plus rulings sent through 9fed42";
 
   # The frame every pure scenario shares:
   # `flake.lib.flowScenario { pkgs, flake, system } { name, target, script }`.

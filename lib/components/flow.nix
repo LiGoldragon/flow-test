@@ -1,7 +1,8 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
 # XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary 7398a43ca).
+# design gives it (f5a6e9 flow-buildable-design at Primary d849975ab plus rulings sent
+# through 9fed42).
 { inputs }:
 {
   forSystem = system: rec {
@@ -39,7 +40,9 @@
     #   CodexEndpoint.{ ClientPath Home ControlSocketPath Vector<ModelName> }
     #   HarnessProfile.{ HarnessKind Vector<CommandSigil> InterruptKeys
     #                    SubmitKeys }
-    # The values are Flow 0.25.0's defaults. Lease is a lock's span in
+    # The values are Flow 0.25.0's defaults. A string is bare unless it has a
+    # space or a delimiter glyph, or begins or ends with . ! or :, so `!` is
+    # written «!». Lease is a lock's span in
     # seconds (60 until Configure.Nexus sets it).
     nexusPayload =
       {
@@ -58,8 +61,8 @@
                             ${home}/.codex-next
                             ${home}/.codex-next/app-server-control/app-server-control.sock
                             [ gpt-6-sol gpt-6-luna gpt-6-astra ] }
-                          [ { Claude [ «/» «!» «#» ] [ esc esc ] [ enter ] }
-                            { Codex [ «/» «!» ] [ esc ] [ ] } ]
+                          [ { Claude [ / «!» # ] [ esc esc ] [ enter ] }
+                            { Codex [ / «!» ] [ esc ] [ ] } ]
                           [ Psyche Mind Field ]
                           ${runtime}/message/message.sock
                           ${lease} }

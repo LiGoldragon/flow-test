@@ -14,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     awake("{ Mind nexus Secondary }", "first")
     _, pid = open_pane("second")
-    expect("second Bind", meta(f"Bind.{{ {{ Mind nexus Secondary }} {process(pid)} }}"), "Refused.Taken.{ Mind nexus Secondary }")
+    expect("second Bind", flow(f"Bind.{{ {{ Mind nexus Secondary }} {process(pid)} }}"), "Refused.Taken.{ Mind nexus Secondary }")
   '';
 }

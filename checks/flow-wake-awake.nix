@@ -14,7 +14,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     pane, _, flow_id = awake("{ Mind nexus Secondary }", "mind")
-    expect("Wake awake", flow("Wake.{ { Mind nexus Secondary } Order.«ftWakeAwake» }"), "Queued")
+    expect("Wake awake", flow("Wake.{ { Mind nexus Secondary } Order.ftWakeAwake }"), "Queued")
     expect("Report Stopped", flow(f"Report.{{ {flow_id} Stopped }}"), "Reported")
     pane_shows("drained at the Stop", pane, "ftWakeAwake")
   '';

@@ -14,10 +14,10 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     asleep("{ Mind wake Secondary }", "wake")
-    expect("Wake with a Notice", flow("Wake.{ { Mind wake Secondary } Notice.«ftWakeNotice» }"), "Queued")
-    expect("Wake with a Result", flow("Wake.{ { Mind wake Secondary } Result.«ftWakeResult» }"), "Queued")
+    expect("Wake with a Notice", flow("Wake.{ { Mind wake Secondary } Notice.ftWakeNotice }"), "Queued")
+    expect("Wake with a Result", flow("Wake.{ { Mind wake Secondary } Result.ftWakeResult }"), "Queued")
     expect("Current after", flow("Current.{ Mind wake Secondary }"), "Current.Asleep")
     listed = expect_prefix("Metaflows", flow("Metaflows"), "Listed.")
-    expect_true("the Queue holds the Notice then the Result", re.search(r"\[ Notice\.«ftWakeNotice» Result\.«ftWakeResult» \]", listed) is not None, listed)
+    expect_true("the Queue holds the Notice then the Result", re.search(r"\[ Notice\.ftWakeNotice Result\.ftWakeResult \]", listed) is not None, listed)
   '';
 }

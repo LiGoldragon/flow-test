@@ -14,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     awake("{ Mind wake Secondary }", "wake")
     expect("End", flow("End.{ Mind wake Secondary }"), "Ended")
-    expect("Wake ended", flow("Wake.{ { Mind wake Secondary } Order.«ftWakeEnded» }"), "Refused.Ended.{ Mind wake Secondary }")
+    expect("Wake ended", flow("Wake.{ { Mind wake Secondary } Order.ftWakeEnded }"), "Refused.Ended.{ Mind wake Secondary }")
   '';
 }

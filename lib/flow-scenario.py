@@ -165,9 +165,10 @@ def process(pid, started=None):
     return f"{{ {pid} {started_of(pid) if started is None else started} }}"
 
 
-# Bind.{ Address Process } → Bound.FlowId; returns the FlowId.
+# Bind.{ Address Process } on the ordinary socket → Bound.FlowId; returns
+# the FlowId.
 def bind(address, pid):
-    reply = expect_match(f"Bind {address}", meta(f"Bind.{{ {address} {process(pid)} }}"), r"Bound\.\S+")
+    reply = expect_match(f"Bind {address}", flow(f"Bind.{{ {address} {process(pid)} }}"), r"Bound\.\S+")
     return reply[len("Bound."):]
 
 
@@ -233,25 +234,34 @@ def lock_of(reply):
     return body, int(numbers[-1])
 
 
-# The Message stand-in: Lock, Deliver and Release are accepted only from
-# the Message Nexus's process, which Message binds at its start under its
-# own address. Here a pane's shell is bound as Message and those requests
-# run inside it, so Flow finds Message's process among the caller's
-# ancestors (as Identify walks them).
-MESSAGE = "{ Mind message Secondary }"
-MESSAGE_PANE = []
+# The Message stand-in. Lock, Deliver and Release are accepted only from
+# the Message Nexus's own process: the connecting peer's pid and start time
+# must equal those bound under Message's address. Each such request runs
+# in a fresh process that waits, is bound as Message (a Bind over a gone
+# process replaces it), and then execs `flow`, keeping its pid and start
+# time, so the bound process is the one that connects.
+MESSAGE = "{ Field message Primary }"
+MESSAGE_RUNS = [0]
 
 
-def message_pane():
-    if not MESSAGE_PANE:
-        pane, pid = open_pane("message")
-        bind(MESSAGE, pid)
-        MESSAGE_PANE.append(pane)
-    return MESSAGE_PANE[0]
+def as_message(datom):
+    MESSAGE_RUNS[0] += 1
+    base = f"/tmp/message-{MESSAGE_RUNS[0]}"
+    inner = f'echo $$ > {base}.pid; read -r go < {base}.go; exec flow "$1"'
+    rig(f"mkfifo {base}.go")
+    rig(f"(sh -c {shlex.quote(inner)} _ {shlex.quote(datom)} > {base}.reply 2>&1; echo $? > {base}.code) > /dev/null 2>&1 &")
+    machine.wait_until_succeeds(f"test -s {base}.pid", timeout=30)
+    pid = int(machine.succeed(f"cat {base}.pid").strip())
+    bind(MESSAGE, pid)
+    machine.succeed(f"echo go > {base}.go")
+    machine.wait_until_succeeds(f"test -s {base}.code", timeout=60)
+    code = machine.succeed(f"cat {base}.code").strip()
+    reply = machine.succeed(f"cat {base}.reply").strip()
+    return code, reply
 
 
 def expect_message(label, datom, want, prefix=False):
-    code, got = in_pane(message_pane(), flow(datom))
+    code, got = as_message(datom)
     met = got.startswith(want) if prefix else got == want
     return judge(label, got, code, met, f"«{want}{'…' if prefix else ''}»")
 

@@ -16,6 +16,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake("{ Mind nexus Secondary }", "mind")
     held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
     expect("End", flow("End.{ Mind nexus Secondary }"), "Ended")
-    expect_message("Deliver", deliver(held, "Order.«ftDeliverEnded»"), "Refused.Ended.{ Mind nexus Secondary }")
+    expect_message("Deliver", deliver(held, "Order.ftDeliverEnded"), "Refused.Ended.{ Mind nexus Secondary }")
   '';
 }

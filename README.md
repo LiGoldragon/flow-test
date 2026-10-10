@@ -4,8 +4,9 @@ Acceptance scenarios that run the real Flow Nexus in a NixOS virtual machine
 and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
-`flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-7398a43ca, and f5a6e9's later rulings where they go past it. The lock: `Lock.{ Sender Recipient }`,
+`flows/f5a6e9/reports/flow-buildable-design.md` at Primary d849975ab plus
+f5a6e9's rulings sent through flow 9fed42, until a fold carrying them is
+published. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -17,8 +18,9 @@ choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `flow-nexus 'Start.{ <ordinary socket> <meta socket> }'`. Configure.Nexus
 holds no socket paths, carries full CodexEndpoint and HarnessProfile values
 (meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>), and ends with `Lease`,
-seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release run inside a pane whose shell is bound as
-`{ Mind message Secondary }`, Message's stand-in. Where the design left a case open,
+seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release are accepted only from the Message Nexus's own
+process: each runs in a fresh process bound (on the ordinary socket, which
+now carries Bind) as `{ Field message Primary }`, which then execs `flow`. Where the design left a case open,
 the scenarios follow f5a6e9's rulings (current best) given to this repository.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
@@ -112,12 +114,14 @@ expected-failing:
 | flow-configure-model | Configure.Model | Configured, twice; update: Configured |
 | flow-configure-threshold | Configure.Threshold | Configured, twice; update: Configured |
 | flow-configure-module | Configure.Module | Configured, twice; new hash: Configured |
+| flow-module-before-nexus | Configure.Module | recorded unchecked; Launch then Refused.HashMismatch |
 | flow-configure-no-source | Configure.Module | Refused.NoSource.Path |
 | flow-configure-hash-mismatch | Configure.Module | Refused.HashMismatch, refused whole |
 | flow-forget | Forget | Forgotten; Launch then Refused.Unknown.Key |
 | flow-forget-unknown | Forget | Refused.Unknown.{ Vision ghost } (meta: Unknown carries the Key bare) |
 | flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
 | flow-bind-taken | Bind | Refused.Taken.Address |
+| flow-bind-rebind | Bind | over a gone process: Bound; Current.Awake |
 | flow-bind-dead | Bind | Refused.Unidentified.Process, dead and reused pid |
 
 `flow-claude` (semi-sandbox, `FLOW_TEST_LIVE=1`, Claude on Haiku): Launch

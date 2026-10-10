@@ -22,7 +22,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
     expect_true("Until is the lease away", 3 <= until - now <= 5, f"Until {until}, now {now}")
     machine.wait_until_succeeds(f"test $(date +%s) -gt {until}", timeout=30)
-    expect_message("Deliver after the lease", deliver(held, "Order.«ftLease»"), "Refused.Lapsed")
+    expect_message("Deliver after the lease", deliver(held, "Order.ftLease"), "Refused.Lapsed")
     pane_lacks("recipient pane", pane, "ftLease")
     lock(PSYCHE, "{ Mind nexus Secondary }", "Lock after the lapse")
   '';
