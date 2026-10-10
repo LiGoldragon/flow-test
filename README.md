@@ -104,7 +104,7 @@ expected-failing:
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
 | flow-deliver-ended-lapsed | Deliver | lock lapsed, recipient then ended: Refused.Lapsed |
-| flow-deliver-forgotten-module | Deliver | module forgotten after the Lock: Refused.Unknown.Key |
+| flow-deliver-forgotten-module | Deliver | module forgotten after the Lock: a Notice still Queued |
 | flow-deliver-lapsed | Deliver | Refused.Lapsed |
 | flow-deliver-unknown-lock | Deliver | Refused.Unknown.Lock |
 | flow-release | Release | Released; Lock granted again |
