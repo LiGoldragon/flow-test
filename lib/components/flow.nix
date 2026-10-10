@@ -1,7 +1,7 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
 # XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary 5f0e64f34).
+# design gives it (f5a6e9 flow-buildable-design at Primary d849975ab).
 { inputs }:
 {
   forSystem = system: rec {
@@ -29,14 +29,12 @@
     # Configure.Threshold.{ Layer Handover Refresh }, percent of the window.
     thresholdPayload = layer: "Configure.Threshold.{ ${layer} 20 40 }";
 
-    # Configure.Nexus.{ OrdinarySocketPath MetaSocketPath SourceRoot
-    # StableCodex NextCodex HarnessProfiles MetaAspects MessageNexusPath
-    # Lease }, every path the default one so no restart is asked; Lease is
-    # a lock's span in seconds (60 by default).
+    # Configure.Nexus.{ SourceRoot StableCodex NextCodex HarnessProfiles
+    # MetaAspects MessageNexusPath Lease }. The listening sockets come from
+    # the Nexus's start command (none: the defaults), not from Configure;
+    # Lease is a lock's span in seconds (60 until Configure.Nexus sets it).
     nexusPayload = runtime: sourceRoot: lease: ''
-      Configure.Nexus.{ ${runtime}/${ordinarySocket}
-                        ${runtime}/${metaSocket}
-                        ${sourceRoot}
+      Configure.Nexus.{ ${sourceRoot}
                         codex-stable-flow-client
                         codex-next-flow-client
                         [ claude ]

@@ -5,7 +5,7 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-5f0e64f34, and f5a6e9's later rulings where they go past it. The lock: `Lock.{ Sender Recipient }`,
+d849975ab, and f5a6e9's later rulings where they go past it. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -14,7 +14,8 @@ the sender inside the lock. A Key is the pair, `{ Vision flow }`, also in `Confi
 flow } { Repository Hash Path } }` as the design's example writes it. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `Refused.Unknown.Address.{ Mind ghost Secondary }`. Configure.Nexus
-ends with `Lease`, seconds, 60 by default. Where the design left a case open,
+holds no socket paths (the start command gives them) and ends with `Lease`,
+seconds, 60 until it is set; the scenarios still send it first. Where the design left a case open,
 the scenarios follow f5a6e9's rulings (current best) given to this repository.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
@@ -57,6 +58,7 @@ expected-failing:
 | flow-launch-unknown-key | Launch | Refused.Unknown.Key.{ Vision ghost } |
 | flow-launch-no-layer | Launch | Refused.NoLayer |
 | flow-launch-awake | Launch | Refused.Awake.FlowId |
+| flow-launch-not-configured | Launch | no Configure.Nexus: Refused.NotConfigured |
 | flow-wake-unknown | Wake | Refused.Unknown.Address |
 | flow-wake-ended | Wake | Refused.Ended.Address |
 | flow-wake-queued | Wake | Notice and Result to Asleep: Queued; Queue holds both |
@@ -99,6 +101,7 @@ expected-failing:
 | flow-stop-unknown | Stop | Refused.Unknown.FlowId |
 | flow-metaflows | Metaflows | Listed, awake and asleep |
 | flow-configure-nexus | Configure.Nexus | Configured, twice; disagreeing: Refused.Conflict |
+| flow-configure-model-before-nexus | Configure.Model | Configured before any Configure.Nexus |
 | flow-configure-model | Configure.Model | Configured, twice; update: Configured |
 | flow-configure-threshold | Configure.Threshold | Configured, twice; update: Configured |
 | flow-configure-module | Configure.Module | Configured, twice; new hash: Configured |

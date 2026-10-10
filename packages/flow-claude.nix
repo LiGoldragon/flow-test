@@ -113,7 +113,7 @@ pkgs.writeShellApplication {
     }
 
     configureAll() {
-      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock 60 }"
+      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock 60 }"
       for layer in ${builtins.concatStringsSep " " flow.layers}; do
         expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer $model }"
         expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"
