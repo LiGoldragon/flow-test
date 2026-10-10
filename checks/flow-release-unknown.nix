@@ -14,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake(PSYCHE, "psyche")
     awake("{ Mind nexus Secondary }", "mind")
     forged = f"{{ {PSYCHE} {{ Mind nexus Secondary }} 4102444800 }}"
-    expect("Release forged", flow(f"Release.{forged}"), f"Refused.Unknown.{forged}")
+    expect("Release forged", flow(f"Release.{forged}"), f"Refused.Unknown.Lock.{forged}")
   '';
 }

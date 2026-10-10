@@ -1,7 +1,7 @@
 # Configure.Module with the fixture file's Blake3: Configured; again:
 # Configured; the same key with another source and hash is an update:
 # Configured, and the key stays registered: a Launch naming it is refused
-# Awake (the metaflow is bound), never UnknownModule.
+# Awake (the metaflow is bound), never Unknown.Key.
 # Target: mind.
 {
   pkgs,

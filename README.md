@@ -10,7 +10,9 @@ written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
 `NoneAbove`. The Lock is `{ Sender Address Until }`. Deliver is `Deliver.{ Lock Request }`,
-the sender inside the lock. A Key is the pair, `{ Vision flow }`. Configure.Nexus
+the sender inside the lock. A Key is the pair, `{ Vision flow }`. Unknown is one refusal carrying a
+choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
+`Refused.Unknown.Address.{ Mind ghost Secondary }`. Configure.Nexus
 ends with `Lease`, seconds, 60 by default. Where the design left a case open,
 the scenarios follow f5a6e9's rulings (current best) given to this repository.
 
@@ -51,7 +53,7 @@ expected-failing:
 
 | check | request | expect |
 |---|---|---|
-| flow-launch-unknown-module | Launch | Refused.UnknownModule.{ Vision ghost } |
+| flow-launch-unknown-key | Launch | Refused.Unknown.Key.{ Vision ghost } |
 | flow-launch-no-layer | Launch | Refused.NoLayer |
 | flow-launch-awake | Launch | Refused.Awake.FlowId |
 | flow-wake-unknown | Wake | Refused.Unknown.Address |
@@ -64,14 +66,17 @@ expected-failing:
 | flow-refresh-held | Refresh | Refused.Held.Lock |
 | flow-end | End | Ended; Current.Ended |
 | flow-end-unknown | End | Refused.Unknown.Address |
+| flow-end-ended | End | Refused.Ended.Address |
 | flow-end-held | End | Refused.Held.Lock; Ended after Release |
 | flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
 | flow-lock-address | Lock | Locked.{ Sender Address Until }, Until 60 s away |
 | flow-lock-up | Lock | Up resolved from the Sender to { Mind nexus Primary } |
+| flow-lock-up-unknown | Lock | Up to no metaflow: Refused.Unknown.Address, the resolved address |
 | flow-lock-none-above | Lock | Refused.NoneAbove |
 | flow-lock-held | Lock | Refused.Held.Lock; granted after the lapse |
 | flow-lock-lease | Lock | Lease 3 s: Until 3 s away; Lapsed after it |
 | flow-lock-unknown | Lock | Refused.Unknown.Address |
+| flow-lock-unknown-sender | Lock | Refused.Unknown.Address, the sender's address |
 | flow-lock-ended | Lock | Refused.Ended.Address |
 | flow-lock-off-route | Lock | Refused.OffRoute |
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
@@ -98,8 +103,8 @@ expected-failing:
 | flow-configure-module | Configure.Module | Configured, twice; new hash: Configured |
 | flow-configure-no-source | Configure.Module | Refused.NoSource.Path |
 | flow-configure-hash-mismatch | Configure.Module | Refused.HashMismatch, refused whole |
-| flow-forget | Forget | Forgotten; Launch then Refused.UnknownModule |
-| flow-forget-unknown | Forget | Refused.UnknownModule.{ Vision ghost } |
+| flow-forget | Forget | Forgotten; Launch then Refused.Unknown.Key |
+| flow-forget-unknown | Forget | Refused.Unknown.Key.{ Vision ghost } |
 | flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
 | flow-bind-taken | Bind | Refused.Taken.Address |
 | flow-bind-dead | Bind | Refused.Unidentified.Process, dead and reused pid |

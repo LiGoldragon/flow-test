@@ -11,6 +11,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    expect("Report ghost", flow("Report.{ ghost1 Started }"), "Refused.Unknown.ghost1")
+    expect("Report ghost", flow("Report.{ ghost1 Started }"), "Refused.Unknown.FlowId.ghost1")
   '';
 }

@@ -11,6 +11,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    expect("Stop ghost", flow("Stop.ghost1"), "Refused.Unknown.ghost1")
+    expect("Stop ghost", flow("Stop.ghost1"), "Refused.Unknown.FlowId.ghost1")
   '';
 }
