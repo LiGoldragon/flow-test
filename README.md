@@ -4,9 +4,8 @@ Acceptance scenarios that run the real Flow Nexus in a NixOS virtual machine
 and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
-`flows/f5a6e9/reports/flow-buildable-design.md` at Primary d849975ab plus
-f5a6e9's rulings sent through flow 9fed42, until a fold carrying them is
-published. The lock: `Lock.{ Sender Recipient }`,
+`flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
+30e8efc4d. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -20,8 +19,7 @@ holds no socket paths, carries full CodexEndpoint and HarnessProfile values
 (meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>), and ends with `Lease`,
 seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release are accepted only from the Message Nexus's own
 process: each runs in a fresh process bound (on the ordinary socket, which
-now carries Bind) as `{ Field message Primary }`, which then execs `flow`. Where the design left a case open,
-the scenarios follow f5a6e9's rulings (current best) given to this repository.
+now carries Bind) as `{ Field message Primary }`, which then execs `flow`.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
 lands, `nix flake update flow` and commit the lock.
@@ -91,7 +89,6 @@ expected-failing:
 | flow-lock-not-message | Lock | from a peer not Message: Refused.NotMessage |
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
-| flow-deliver-ended | Deliver | Refused.Ended.Address |
 | flow-deliver-lapsed | Deliver | Refused.Lapsed |
 | flow-deliver-unknown-lock | Deliver | Refused.Unknown.Lock |
 | flow-release | Release | Released; Lock granted again |
