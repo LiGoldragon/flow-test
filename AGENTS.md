@@ -8,7 +8,7 @@ Read the `compensation-nix` skill before writing anything here, and
 The test twin of `flow`. It contains **no component source**. Every tested
 repository is a pinned flake input whose `nixpkgs` follows this flake's:
 
-    inputs.flow.url = "github:LiGoldragon/flow/<rev>";
+    inputs.flow.url = "github:LiGoldragon/flow";
     inputs.flow.inputs.nixpkgs.follows = "nixpkgs";
 
 Tests belong here and not in the tested repository's flake, because an edited
@@ -24,6 +24,9 @@ touched no Rust.
   `lib/components/<name>.nix`.
 - Name every package as `pkgs.<name>`; never `with pkgs;`.
 - A pure scenario is a check: no network, no credentials.
+- A scenario declares its target: `pass`, or `mind` for Mind's acceptance
+  target (expected-failing against the pinned Flow). Promote a `mind`
+  scenario to `pass` when its check fails as unexpectedly passing.
 - A semi-sandbox is a `packages/<scenario>.nix` runner with a `mktemp -d` state
   root and an exit trap. Never a check, never `__impure`, never `__noChroot`.
 - Run `nix fmt` before every commit. `pkgs.nixfmt` takes files, not a

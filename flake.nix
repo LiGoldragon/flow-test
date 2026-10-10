@@ -1,5 +1,5 @@
 {
-  description = "flow-test — Nix sandboxes that drive the Flow Nexus and its clients. The tested repository is a pinned flake input; scenarios are named by the components they drive.";
+  description = "flow-test — acceptance scenarios that run the real Flow Nexus in a virtual machine, written to Flow's design (f5a6e9 flow-buildable-design at Primary e846c2ca1).";
 
   inputs = {
     nixpkgs.url = "github:LiGoldragon/nixpkgs?ref=main";
@@ -7,11 +7,8 @@
     blueprint.url = "github:numtide/blueprint";
     blueprint.inputs.nixpkgs.follows = "nixpkgs";
 
-    flow.url = "github:LiGoldragon/flow/4ad596d466a45de56239c55d415474f8b35ab163";
+    flow.url = "github:LiGoldragon/flow";
     flow.inputs.nixpkgs.follows = "nixpkgs";
-
-    harness.url = "github:LiGoldragon/harness";
-    harness.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = inputs: inputs.blueprint { inherit inputs; };

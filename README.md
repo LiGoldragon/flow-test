@@ -1,108 +1,99 @@
 # flow-test
 
-Nix sandboxes that drive the Flow Nexus and its clients. This repository holds
-no component source: it **pins `flow` as a flake input** (its `nixpkgs`
-follows this flake's) and drives it. Scenarios change often; the Nexus changes
-rarely, so a new or edited scenario never invalidates the Rust build, and Flow
-moves forward here only when this repository updates its input.
+Acceptance scenarios that run the real Flow Nexus in a NixOS virtual machine
+and drive it through its real `flow` and `flow-meta` clients. This repository
+holds no component source: `flow` is a flake input whose `nixpkgs` follows
+this flake's. Every request is written as Flow's design gives it:
+`flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
+e846c2ca1. Lock is `Lock.Recipient`, written `Lock.Address.{ Mind nexus
+Secondary }` or `Lock.Up`; Flow resolves Up from the sender it identifies by
+process.
 
-Pinned: `github:LiGoldragon/flow/4ad596d466a45de56239c55d415474f8b35ab163`
-(0.24.0), and `github:LiGoldragon/harness` (its `flow-id`, which Flow runs to
-claim a FlowId), both following this flake's `nixpkgs`.
+Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
+lands, `nix flake update flow` and commit the lock.
 
-Test unpushed Flow code with
-`--override-input flow path:/git/github.com/LiGoldragon/flow`.
-Once it lands, `nix flake update flow` and commit the lock.
+## Targets
+
+Each scenario declares a target. `pass`: it must meet every expectation.
+`mind`: it is Mind's acceptance target, expected to miss against the pinned
+Flow. A missed expectation is recorded as expected-failing and the check
+builds; a `mind` scenario that meets every expectation fails its check, and
+is then promoted to `pass`. A failure of the rig (the machine, the units,
+the sockets, Herdr, the drive's own Python) fails the check either way.
+
+Each scenario writes `outcome` (its result line, then every step's reply) to
+its output. `checks.<system>.report` gathers them, grouped as passing and
+expected-failing:
+
+    nix build .#checks.x86_64-linux.report -L && cat result
 
 ## Layout
 
-Laid out for [numtide blueprint](https://numtide.github.io/blueprint): the
-directory tree is the flake's output tree.
-
-    flake.nix                          inputs and `inputs.blueprint { inherit inputs; }`
-    lib/default.nix                    flake.lib: components, scenario, cheapestModel
-    lib/scenario.nix                   the frame of a pure scenario: root, expect, exit trap
-    lib/components/flow.nix            the Nexus and both clients: paths, configuration, start, stop
-    checks/flow.nix                    pure scenario (a check)
-    checks/flow-populated-store.nix    pure: restart on a populated store
-    lib/components/claude.nix          Claude Code from the pinned nixpkgs
-    lib/components/flow-hook.nix       flow-hook and the hook settings Flow writes
-    lib/components/flow-id.nix         flow-id from the pinned harness
-    lib/components/herdr-fixture.nix   a Herdr stand-in: snapshot, and the launch stages up to Title
-    packages/flow-claude.nix           semi-sandbox runner (gated; the launch documented, not yet run)
-    packages/flow-claude-hook.nix      semi-sandbox runner (gated): the hook, hand-run and Flow-launched
-    checks/lint.nix                    nixfmt --check, deadnix, statix
-    formatter.nix                      pkgs.nixfmt
+    flake.nix                    inputs and `inputs.blueprint { inherit inputs; }`
+    lib/default.nix              flake.lib: components, flowScenario, cheapestModel
+    lib/components/flow.nix      the Flow Nexus and clients: paths, payloads
+    lib/components/herdr.nix     headless Herdr
+    lib/flow-scenario.nix        the frame: one VM, two user services, the target
+    lib/flow-scenario.py         the frame's helpers: configure, panes, Bind, Lock
+    checks/herdr.nix             the rig: headless Herdr in the VM
+    checks/flow-*.nix            one scenario per file
+    checks/report.nix            every scenario's outcome
+    packages/flow-claude.nix     semi-sandbox: requests that start a harness
+    fixtures/flow/source/        module source files for Configure.Module
+    checks/lint.nix, formatter.nix  style gate
 
 ## Scenarios
 
-| scenario | kind | components |
-| --- | --- | --- |
-| `flow` | pure check | Flow (Nexus, `flow`, `flow-meta`) |
-| `flow-populated-store` | pure check | Flow |
-| `flow-claude` | semi-sandbox, gated | Flow, Claude Code on the cheapest model |
-| `flow-claude-hook` | semi-sandbox, gated | Flow, flow-hook, flow-id, fixture Herdr, a private Herdr pane, Claude Code on the cheapest model |
+| check | request | expect |
+|---|---|---|
+| flow-launch-unknown-module | Launch | Refused.UnknownModule.Key |
+| flow-launch-no-layer | Launch | Refused.NoLayer |
+| flow-wake-unknown | Wake | Refused.Unknown.Address |
+| flow-wake-ended | Wake | Refused.Ended.Address |
+| flow-wake-queued | Wake | Notice and Result to Asleep: Queued; Queue holds both |
+| flow-refresh-unknown | Refresh | Refused.Unknown.Address |
+| flow-refresh-ended | Refresh | Refused.Ended.Address |
+| flow-end | End | Ended; Current.Ended |
+| flow-end-unknown | End | Refused.Unknown.Address |
+| flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
+| flow-lock-address | Lock | Locked.{ Address Until } |
+| flow-lock-up | Lock | Up resolved: Locked.{ { Mind nexus Primary } Until } |
+| flow-lock-none-above | Lock | Refused.NoneAbove |
+| flow-lock-unidentified | Lock | Refused.Unidentified.Process |
+| flow-lock-held | Lock | Refused.Held.Lock; granted after the lapse |
+| flow-lock-unknown | Lock | Refused.Unknown.Address |
+| flow-lock-ended | Lock | Refused.Ended.Address |
+| flow-deliver-awake | Deliver | Delivered; reaches the pane |
+| flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
+| flow-deliver-ended | Deliver | Refused.Ended.Address |
+| flow-deliver-lapsed | Deliver | Refused.Lapsed |
+| flow-deliver-off-route | Deliver | Refused.OffRoute |
+| flow-release | Release | Released; Lock granted again |
+| flow-identify | Identify | Identified.Address, shell and descendant |
+| flow-identify-unidentified | Identify | Refused.Unidentified.Process, unbound and reused pid |
+| flow-report | Report | Reported for each Event |
+| flow-observe-agent | Observe.Agent | Observed.Agent.String |
+| flow-stop | Stop | Stopped |
+| flow-metaflows | Metaflows | Listed, awake and asleep |
+| flow-configure-nexus | Configure.Nexus | Configured, twice |
+| flow-configure-model | Configure.Model | Configured, twice; Refused.Conflict |
+| flow-configure-threshold | Configure.Threshold | Configured, twice; Refused.Conflict |
+| flow-configure-module | Configure.Module | Configured, twice; Refused.Conflict |
+| flow-configure-no-source | Configure.Module | Refused.NoSource.Path |
+| flow-configure-hash-mismatch | Configure.Module | Refused.HashMismatch, refused whole |
+| flow-forget | Forget | Forgotten; Launch then Refused.UnknownModule |
+| flow-forget-unknown | Forget | Refused.Unknown.Topic |
+| flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
+| flow-bind-taken | Bind | Refused.Taken.Address |
 
-### `flow` (pure)
-
-Starts `flow-nexus` with no arguments on its own `HOME` and `XDG_RUNTIME_DIR`
-inside the build sandbox, so it opens a fresh store at
-`$HOME/.local/state/flow/flow.sema` and binds `flow/flow.sock` and
-`flow/flow-meta.sock` under the runtime directory. It then drives the stock
-clients and compares each whole reply and exit code:
-
-1. both socket files are sockets, the store exists
-2. `List.{}` → `Listed.[]` (the ordinary read that needs no flow;
-   `Observe.Agent` names one)
-3. meta `Retire.ffffff` → `RetireRejected.UnknownFlow`
-4. meta `Configure.{ <configuration> }` →
-   `Configured.{ { <configuration> } NexusRestartRequired }`
-5. `List.{}` → `Listed.[]`
-
-and then stops the Nexus and requires it to exit on TERM. No network, no
-credentials, no model.
-
-The Nexus prints no ready line, so `start` waits (bounded) until each socket
-answers a read-only query (`List.{}`, and a `Retire` of an unknown flow, which
-changes nothing), never on a socket file existing: after a restart the
-previous run's files are still there.
-
-### `flow-populated-store` (pure)
-
-A fresh store is configured over the meta client to move both sockets to
-`moved/ordinary.sock` and `moved/meta.sock` (`Configured.{ … }
-NexusRestartRequired`); the Nexus is stopped with TERM and started again on
-the same directories. It must then answer `List.{}` → `Listed.[]` and the same
-`Configure` on the moved sockets, and the default names (whose stale files are
-still on disk) refuse both clients on stderr with
-`Connection refused (os error 111)`, exit 2. The configuration persisted in
-the store and the Nexus read it back on start.
-
-### `flow-claude` (semi-sandbox, gated)
-
-The light-model launch through Flow, documented for when Flow launches
-harnesses in a sandbox. It refuses to run unless `FLOW_TEST_LIVE=1`:
-
-    FLOW_TEST_LIVE=1 nix run .#flow-claude
-
-With the flag it starts a Nexus in a fresh `mktemp -d /tmp/ft-XXXXXXXX` root,
-configures it with the Claude harness profile, asserts `Listed.[]`, and exits
-3: the launch is not yet exercised. Its steps (credential copy, a sandbox
-Herdr, `Start` with the cheapest model, `Started`, Active in `List`,
-`Observe.Agent`, `Stop`, the bounds) are written at the head of
-`packages/flow-claude.nix`. `nix flake check` only builds its script
-(`pkgs-flow-claude`); no credential and no model reach CI.
-
-| variable | default |
-| --- | --- |
-| `FLOW_TEST_LIVE` | unset: refuse (exit 2) |
-| `FLOW_TEST_MODEL` | `haiku` |
+`flow-claude` (semi-sandbox, `FLOW_TEST_LIVE=1`, Claude on Haiku): Launch
+(Launched.FlowId, titled pane, brief in the first prompt), Wake (Queued then
+Woken.FlowId, drained queue with the Order last), Refresh
+(Refreshed.{ successor predecessor }, Past), Refused.Locked during a refresh,
+and Queued for a busy flow.
 
 ## Running
 
-    find . -name '*.nix' -exec nix fmt {} +
     nix flake check --no-build --option allow-import-from-derivation false
-    nix flake check
-    FLOW_TEST_LIVE=1 nix run .#flow-claude   # only by hand
-
-Builds go to the remote builder.
+    nix flake check --keep-going -L
+    FLOW_TEST_LIVE=1 nix run .#flow-claude

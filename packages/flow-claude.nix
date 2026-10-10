@@ -1,35 +1,18 @@
-# flow-claude — a gated semi-sandbox: a light-model Claude Code flow launched
-# through Flow itself, against its own Flow Nexus. It needs the living's
-# Claude login, the network and Herdr, so it is a runner, never a check, and
-# it refuses to run unless FLOW_TEST_LIVE=1 is set. `nix flake check` only
-# builds this script.
+# flow-claude — semi-sandbox: the requests of Flow's design that start a
+# harness (Launch, Wake, Refresh) and the refusal and placement only a
+# working harness shows (Locked during a refresh, Queued for a busy flow),
+# with real Claude Code flows on the cheapest model. It needs the living's
+# Claude login and the network, so it is a runner, never a check, and it
+# refuses to run unless FLOW_TEST_LIVE=1 is set.
 #
-# What runs today, with the flag set: a fresh short `mktemp -d` root
-# (removed in an exit trap), a Flow Nexus started on it with HOME and
-# XDG_RUNTIME_DIR pointed into the root, a meta `Configure` naming the root's
-# own sockets and source root and the Claude harness profile, and a `List.{}`
-# that must answer `Listed.[]`. Then it stops, exit 3: the launch itself is
-# not yet exercised.
+# A fresh short root (removed in an exit trap) holds HOME, XDG_RUNTIME_DIR
+# and the module source; only ~/.claude/.credentials.json is copied in. A
+# headless Herdr server and flow-nexus start on that root with no arguments
+# and are configured over the meta socket.
 #
-# The launch, once Flow launches harnesses (the drive this runner grows into,
-# after the semi-sandbox in flow 3ec648, witnesses/semi-sandbox-capsule.sh):
-#   1. Copy only `~/.claude/.credentials.json` into the root's home; refuse
-#      when its access token expires within 15 minutes.
-#   2. Start a Herdr server on the root's runtime directory, so the launched
-#      pane is the sandbox's own, never the living's session.
-#   3. Send the ordinary `Start` with a LaunchProfile naming the Claude
-#      harness, the cheapest model (FLOW_TEST_MODEL, default
-#      flake.lib.cheapestModel.claude), one native skill, a source descriptor
-#      with its exact SHA-256 under the root's source root, the root's Herdr
-#      session, and a first instruction asking for one receipt.
-#   4. Assert `Started` (never the transient ambiguity), then `List.{}`
-#      showing the flow Active, then `Observe.Agent.<flow-id>` reaching Idle
-#      or Done after the receipt.
-#   5. `Stop.<flow-id>` and assert `Stopped`; the pane is gone and the row
-#      stays, listed Stopped.
-#   6. Bound the harness by MemoryMax=2G (systemd-run --user --scope), 600 s
-#      and a turn cap; run the unwrapped Claude binary, never the installed
-#      wrapper that prepends --dangerously-skip-permissions.
+# Each test carries a target like the checks: "mind" (expected to miss
+# against the pinned Flow, Mind's acceptance target) or "pass". The runner
+# exits nonzero when a test's result differs from its target.
 {
   pkgs,
   flake,
@@ -38,43 +21,205 @@
 }:
 let
   flow = flake.lib.components.flow.forSystem system;
+  herdr = flake.lib.components.herdr.forPkgs pkgs;
 in
 pkgs.writeShellApplication {
   name = "flow-claude";
 
   runtimeInputs = [
+    pkgs.b3sum
     pkgs.coreutils
+    pkgs.findutils
+    pkgs.gnugrep
+    pkgs.jq
+    flow.package
+    herdr.package
   ];
 
-  meta.description = "Light-model Claude Code flow launched through its own Flow Nexus (gated: needs FLOW_TEST_LIVE=1; the launch step is documented, not yet run).";
+  meta.description = "Launch, Wake and Refresh of Flow's design with Claude Code flows (needs FLOW_TEST_LIVE=1).";
 
   text = ''
     if [ "''${FLOW_TEST_LIVE:-}" != 1 ]; then
-      echo "flow-claude: needs the living's Claude login, the network and Herdr; set FLOW_TEST_LIVE=1 to run it" >&2
+      echo "flow-claude: needs the living's Claude login and the network; set FLOW_TEST_LIVE=1 to run it" >&2
       exit 2
     fi
 
     model="''${FLOW_TEST_MODEL:-${flake.lib.cheapestModel.claude}}"
+    credentials="$HOME/.claude/.credentials.json"
+    if [ ! -s "$credentials" ]; then
+      echo "flow-claude: no Claude login at $credentials" >&2
+      exit 1
+    fi
 
     # A short root: sun_path holds 108 bytes.
     root="$(mktemp -d /tmp/ft-XXXXXXXX)"
-    flowNexusPid=
-    # Kill the Nexus and remove the root on every exit.
-    trap 'if [ -n "$flowNexusPid" ]; then kill "$flowNexusPid" 2>/dev/null || true; wait "$flowNexusPid" 2>/dev/null || true; fi; rm -rf "$root"' EXIT
+    pids=()
+    trap 'kill "''${pids[@]}" 2>/dev/null || true; herdr server stop > /dev/null 2>&1 || true; rm -rf "$root"' EXIT
 
     export HOME="$root/home" XDG_RUNTIME_DIR="$root/run"
-    mkdir -p "$HOME/primary"
-    unset FLOW_SOCKET FLOW_META_SOCKET
-    ${flow.start}
+    mkdir -p "$HOME/.claude" "$XDG_RUNTIME_DIR" "$root/source"
+    chmod 700 "$XDG_RUNTIME_DIR"
+    cp "$credentials" "$HOME/.claude/.credentials.json"
+    cp -r ${../fixtures/flow/source}/. "$root/source/"
+    SHELL="${pkgs.bashInteractive}/bin/bash" herdr server > "$root/herdr.log" 2>&1 &
+    pids+=($!)
+    RUST_LOG=debug ${flow.nexus} 2> "$root/flow-nexus.log" &
+    pids+=($!)
 
-    configuration="{ $FLOW_SOCKET $FLOW_META_SOCKET $HOME/primary { /opt/stable-client /opt/stable /opt/stable/control.sock [ stable-model ] } { /opt/next-client /opt/next /opt/next/control.sock [ next-model ] } [ { Claude [ / «!» # ] [ esc esc ] [ enter ] } ] [ Psyche ] /opt/message-nexus }"
-    reply="$(timeout 10 ${flow.metaClient} "Configure.$configuration")"
-    test "$reply" = "Configured.{ $configuration NexusRestartRequired }" || { echo "flow-claude: Configure answered $reply" >&2; exit 1; }
-    reply="$(timeout 10 ${flow.client} 'List.{}')"
-    test "$reply" = 'Listed.[]' || { echo "flow-claude: List answered $reply" >&2; exit 1; }
-    echo "flow-claude: Nexus configured on $root"
+    for socket in ${flow.ordinarySocket} ${flow.metaSocket}; do
+      for _ in $(seq 1 100); do
+        [ -S "$XDG_RUNTIME_DIR/$socket" ] && break
+        sleep 0.1
+      done
+      [ -S "$XDG_RUNTIME_DIR/$socket" ] || { echo "flow-claude: $socket never bound" >&2; exit 1; }
+    done
+    for _ in $(seq 1 100); do herdr workspace list > /dev/null 2>&1 && break; sleep 0.1; done
 
-    echo "flow-claude: the $model launch through Flow is not yet exercised (steps 1-6 in packages/flow-claude.nix)" >&2
-    exit 3
+    # expect <label> <reply> <command...>: the whole output must equal <reply>.
+    expect() {
+      label="$1" want="$2"
+      shift 2
+      got="$(timeout 120 "$@" 2>&1)" || true
+      echo "$label: «$got»"
+      [ "$got" = "$want" ] || { echo "$label: expected «$want»" >&2; return 1; }
+    }
+    # reply <label> <command...>: prints the output to stdout, logs it.
+    reply() {
+      label="$1"
+      shift
+      got="$(timeout 120 "$@" 2>&1)" || true
+      echo "$label: «$got»" >&2
+      printf '%s' "$got"
+    }
+    # The newest Claude transcript under the root.
+    newestTranscript() {
+      find "$HOME/.claude/projects" -name '*.jsonl' -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-
+    }
+    # The transcript holding a marker, waited for up to five minutes.
+    transcriptWith() {
+      for _ in $(seq 1 600); do
+        found="$(grep -l -r --include='*.jsonl' "$1" "$HOME/.claude/projects" 2>/dev/null | head -1)" || true
+        [ -n "$found" ] && { echo "$found"; return 0; }
+        sleep 0.5
+      done
+      return 1
+    }
+    firstPrompt() {
+      jq -rs '[.[] | select(.type == "user")][0].message.content | if type == "string" then . else map(.text // "") | join("") end' "$1"
+    }
+    launch() {
+      launched="$(reply "Launch $1" flow "Launch.{ $1 [ vision-flow ] «$2» }")"
+      case "$launched" in Launched.*) echo "''${launched#Launched.}" ;; *) return 1 ;; esac
+    }
+
+    configureAll() {
+      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock }"
+      for layer in ${builtins.concatStringsSep " " flow.layers}; do
+        expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer $model }"
+        expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"
+      done
+      digest="$(b3sum --no-names "$root/source/psyche-skills/vision/flow.md")"
+      expect "Configure.Module" Configured flow-meta "Configure.Module.{ Vision flow { psyche-skills $digest vision/flow.md } }"
+    }
+
+    # Launch: Launched.FlowId; Current is Awake with it; the pane is titled
+    # with the address written short; the first prompt carries the brief.
+    testLaunch() {
+      id="$(launch '{ Mind launch Secondary }' 'Reply with the word ftLaunched, then stop.')"
+      expect "Current" "Current.Awake.$id" flow 'Current.{ Mind launch Secondary }'
+      herdr pane list | grep -q '{ Mind launch Secondary }' || { echo "no pane titled { Mind launch Secondary }" >&2; return 1; }
+      transcript="$(transcriptWith ftLaunched)"
+      case "$(firstPrompt "$transcript")" in *ftLaunched*) ;; *) echo "the first prompt lacks the brief" >&2; return 1 ;; esac
+    }
+
+    # Wake: an asleep metaflow (launched, its pane closed) takes a Notice
+    # (Queued), then an Order (Woken.FlowId); the woken flow's first prompt
+    # ends with the drained queue, the Order last.
+    testWake() {
+      launch '{ Mind wake Secondary }' 'Reply ok, then stop.' > /dev/null
+      pane="$(herdr pane list | jq -r '.result.panes[] | select((.title // "") | contains("{ Mind wake Secondary }")) | .pane_id' | head -1)"
+      herdr pane close "$pane"
+      expect "Current before" Current.Asleep flow 'Current.{ Mind wake Secondary }'
+      expect "Wake with a Notice" Queued flow 'Wake.{ { Mind wake Secondary } Notice.«ftWake branch merged» }'
+      woken="$(reply "Wake with an Order" flow 'Wake.{ { Mind wake Secondary } Order.«ftWake reply ok» }')"
+      case "$woken" in Woken.*) ;; *) return 1 ;; esac
+      transcript="$(transcriptWith 'ftWake reply ok')"
+      first="$(firstPrompt "$transcript")"
+      case "$first" in
+        *'[ Notice.«ftWake branch merged» Order.«ftWake reply ok» ]'*) ;;
+        *) echo "the woken flow's first prompt lacks the drained queue, the Order last" >&2; return 1 ;;
+      esac
+    }
+
+    # Refresh: Refreshed.{ successor predecessor }; Current is Awake with the
+    # successor; Metaflows lists the predecessor in Past.
+    testRefresh() {
+      old="$(launch '{ Mind refresh Secondary }' 'Reply ok, then stop.')"
+      refreshed="$(reply "Refresh" flow 'Refresh.{ Mind refresh Secondary }')"
+      case "$refreshed" in "Refreshed.{ "*" $old }") ;; *) return 1 ;; esac
+      new="''${refreshed#Refreshed.\{ }"
+      new="''${new%% *}"
+      expect "Current" "Current.Awake.$new" flow 'Current.{ Mind refresh Secondary }'
+      listed="$(reply Metaflows flow Metaflows)"
+      case "$listed" in *"{ Mind refresh Secondary } Awake.$new [ $old ]"*) ;; *) return 1 ;; esac
+    }
+
+    # Locked: a Lock while a refresh is under way is refused Locked.
+    testRefreshLocked() {
+      launch '{ Mind locked Secondary }' 'Reply ok, then stop.' > /dev/null
+      flow 'Refresh.{ Mind locked Secondary }' > "$root/refresh-locked.reply" 2>&1 &
+      sleep 1
+      expect "Lock during the refresh" Refused.Locked flow 'Lock.Address.{ Mind locked Secondary }'
+      wait
+    }
+
+    # A busy awake flow: a Deliver under the lock is Queued, then drained at
+    # its next Stop; the transcript holds the Order exactly once.
+    testDeliverBusy() {
+      launch '{ Mind busy Secondary }' 'Run the shell command sleep 30, then reply done.' > /dev/null
+      for _ in $(seq 1 600); do
+        transcript="$(newestTranscript)"
+        [ -n "$transcript" ] && grep -q '"tool_use"' "$transcript" && break
+        sleep 0.5
+      done
+      locked="$(reply Lock flow 'Lock.Address.{ Mind busy Secondary }')"
+      case "$locked" in Locked.*) ;; *) return 1 ;; esac
+      expect "Deliver to the busy flow" Queued flow "Deliver.{ ''${locked#Locked.} { Psyche busy Secondary } Order.«ftBusy reply received» }"
+      for _ in $(seq 1 1200); do grep -q ftBusy "$transcript" && break; sleep 0.5; done
+      count="$(jq -s '[.[] | select(.type == "user") | tostring | select(test("ftBusy"))] | length' "$transcript")"
+      echo "the transcript holds the Order $count times"
+      [ "$count" = 1 ]
+    }
+
+    failed=0
+    # outcome <name> <target> <exit code>
+    outcome() {
+      case "$2:$3" in
+        pass:0) echo "flow-claude $1: passing" ;;
+        mind:0) echo "flow-claude $1: unexpectedly passing; promote it to target pass"; failed=1 ;;
+        pass:*) echo "flow-claude $1: failing (target pass)"; failed=1 ;;
+        mind:*) echo "flow-claude $1: expected-failing (Mind target)" ;;
+      esac
+    }
+    set +e
+    ( set -e; configureAll )
+    configured=$?
+    code=1
+    [ "$configured" = 0 ] && { ( set -e; testLaunch ); code=$?; }
+    outcome Launch mind "$code"
+    code=1
+    [ "$configured" = 0 ] && { ( set -e; testWake ); code=$?; }
+    outcome Wake mind "$code"
+    code=1
+    [ "$configured" = 0 ] && { ( set -e; testRefresh ); code=$?; }
+    outcome Refresh mind "$code"
+    code=1
+    [ "$configured" = 0 ] && { ( set -e; testRefreshLocked ); code=$?; }
+    outcome RefreshLocked mind "$code"
+    code=1
+    [ "$configured" = 0 ] && { ( set -e; testDeliverBusy ); code=$?; }
+    outcome DeliverBusy mind "$code"
+    set -e
+    exit "$failed"
   '';
 }
