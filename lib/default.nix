@@ -9,7 +9,7 @@
 
   # The Primary revision of Flow's design the scenarios are written to
   # (flows/f5a6e9/reports/flow-buildable-design.md).
-  design = "cef7781c0";
+  design = "db98e5bad";
 
   # The frame every pure scenario shares:
   # `flake.lib.flowScenario { pkgs, flake, system } { name, target, script }`.

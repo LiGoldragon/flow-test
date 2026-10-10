@@ -1,7 +1,7 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
 # XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary cef7781c0).
+# design gives it (f5a6e9 flow-buildable-design at Primary db98e5bad).
 { inputs }:
 {
   forSystem = system: rec {
