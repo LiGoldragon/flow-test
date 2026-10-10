@@ -14,8 +14,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     _, _, flow_id = awake("{ Mind nexus Secondary }", "mind")
     asleep("{ Mind other Secondary }", "other")
-    listed = expect_prefix("Metaflows", flow("Metaflows"), "Listed.")
-    expect_true("the awake one", "{ Mind nexus Secondary } Awake." + flow_id in listed, listed)
-    expect_true("the asleep one", "{ Mind other Secondary } Asleep" in listed, listed)
+    want = f"Listed.[ {{ {{ Mind nexus Secondary }} Awake.{flow_id} [] [] }} {{ {{ Mind other Secondary }} Asleep [] [] }} ]"
+    expect("Metaflows", flow("Metaflows"), want)
   '';
 }

@@ -1,4 +1,4 @@
-# Observe.Agent.FlowId for a bound flow: Observed.Agent.String, Herdr's
+# Observe.Agent.FlowId for a bound flow: Observed.Agent.[ Working Idle Done Absent ], Herdr's
 # agent state of its pane.
 # Target: mind.
 {
@@ -13,6 +13,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     _, _, flow_id = awake("{ Mind nexus Secondary }", "mind")
-    expect_prefix("Observe.Agent", flow(f"Observe.Agent.{flow_id}"), "Observed.Agent.")
+    states = ["Working", "Idle", "Done", "Absent"]
+    expect_match("Observe.Agent", flow(f"Observe.Agent.{flow_id}"), r"Observed\.Agent\.(" + "|".join(states) + ")")
   '';
 }

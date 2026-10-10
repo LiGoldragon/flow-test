@@ -123,12 +123,40 @@ def nexus_payload(lease=60, binary=None):
     return NEXUS_TEMPLATE.replace("LEASE", str(lease)).replace("MESSAGE_BINARY", binary or MESSAGE_HELPER)
 
 
+# Configure.Model.{ Layer Harness Native }: Harness is meta-signal-flow's
+# HarnessKind (88f3759: Codex, Claude), Native the model as the harness
+# knows it.
+def model_payload(layer, model=None):
+    return f"Configure.Model.{{ {layer} Claude {model or MODEL} }}"
+
+
+# Datom's canonical print: one space between tokens and inside every
+# bracket and brace, an empty vector as [].
+def canonical(text):
+    return " ".join(text.split()).replace("[ ]", "[]")
+
+
+# Configuration.{ Nexus Models Thresholds Modules } as Flow prints it after
+# configure(): the Nexus payload, every layer's Model and Threshold in the
+# order configure() sent them, then the modules given (already printed).
+def configuration_text(modules):
+    nexus = nexus_payload()[len("Configure.Nexus."):]
+    models = " ".join(f"{{ {layer} Claude {MODEL} }}" for layer in LAYERS)
+    thresholds = " ".join(f"{{ {layer} 20 40 }}" for layer in LAYERS)
+    return canonical(f"Configuration.{{ {nexus} [ {models} ] [ {thresholds} ] [ {' '.join(modules)} ] }}")
+
+
+# A Module as Flow prints it: { Key Source Checked }.
+def module_text(digest, path="vision/flow.md", topic="flow", checked="false"):
+    return f"{{ {{ Vision {topic} }} {{ psyche-skills {digest} {path} }} {checked} }}"
+
+
 # The Nexus's own configuration, then each layer's model and thresholds,
 # over the meta socket. `layers` limits which layers get a model.
 def configure(layers=None):
     expect("Configure.Nexus", meta(nexus_payload()), "Configured")
     for layer in layers if layers is not None else LAYERS:
-        expect(f"Configure.Model {layer}", meta(f"Configure.Model.{{ {layer} {MODEL} }}"), "Configured")
+        expect(f"Configure.Model {layer}", meta(model_payload(layer)), "Configured")
     for layer in LAYERS:
         expect(f"Configure.Threshold {layer}", meta(f"Configure.Threshold.{{ {layer} 20 40 }}"), "Configured")
 
@@ -138,10 +166,10 @@ def module_hash(path="psyche-skills/vision/flow.md"):
     return rig(f"b3sum --no-names {SOURCE_ROOT}/{path}")
 
 
-# Configure.Module, the key written as the pair as the design's example
-# writes it: Configure.Module.{ { Vision flow } { Repository Hash Path } }.
+# Configure.Module.{ Key Source Checked }, Checked false: the hash is checked
+# at the module's first compose. The file is SourceRoot/Repository/Path.
 def module_payload(digest, path="vision/flow.md", topic="flow"):
-    return f"Configure.Module.{{ {{ Vision {topic} }} {{ psyche-skills {digest} {path} }} }}"
+    return f"Configure.Module.{module_text(digest, path, topic)}"
 
 
 def open_pane(label):

@@ -18,6 +18,10 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     expect_message("Deliver a Notice", deliver(held, "Notice.ftDeliverNotice"), "Queued")
     expect("Current after", flow("Current.{ Mind nexus Secondary }"), "Current.Asleep")
     listed = expect_prefix("Metaflows", flow("Metaflows"), "Listed.")
-    expect_true("the Queue holds the Notice", "Notice.ftDeliverNotice" in listed, listed)
+    # The list also holds Message's own metaflow, bound for the Lock, whose
+    # state after its process exits is not given; so the recipient's entry
+    # is looked for whole.
+    entry = "{ { Mind nexus Secondary } Asleep [] [ Notice.ftDeliverNotice ] }"
+    expect_true("the recipient's entry", entry in listed, listed)
   '';
 }

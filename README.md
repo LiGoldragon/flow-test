@@ -5,13 +5,15 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-c82223e93. The lock: `Lock.{ Sender Recipient }`,
+9b006dd2b. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
 `NoneAbove`. The Lock is `{ Sender Address Until }`. Deliver is `Deliver.{ Lock Request }`,
 the sender inside the lock. A Key is the pair, `{ Vision flow }`, also in `Configure.Module.{ { Vision
-flow } { Repository Hash Path } }` as the design's example writes it. Unknown is one refusal carrying a
+flow } { Repository Hash Path } false }` (Key, Source, Checked). A Model is
+`{ Layer Harness Native }`, Harness one of meta-signal-flow's HarnessKind.
+Replies are compared in datom's canonical print. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `Refused.Unknown.Address.{ Mind ghost Secondary }`. The Nexus starts as
 `flow-nexus 'Start.{ <ordinary socket> <meta socket> }'`. Configure.Nexus
@@ -105,13 +107,13 @@ expected-failing:
 | flow-identify-unidentified | Identify | Refused.Unidentified.Process, unbound and reused pid |
 | flow-report | Report | Reported for each Event |
 | flow-report-unknown | Report | Refused.Unknown.FlowId |
-| flow-observe-agent | Observe.Agent | Observed.Agent.String |
+| flow-observe-agent | Observe.Agent | Observed.Agent one of Working Idle Done Absent |
 | flow-observe-agent-unknown | Observe.Agent | Refused.Unknown.FlowId |
 | flow-stop | Stop | Stopped; Current.Asleep |
 | flow-stop-unknown | Stop | Refused.Unknown.FlowId |
-| flow-metaflows | Metaflows | Listed, awake and asleep |
+| flow-metaflows | Metaflows | exact Listed, awake and asleep, in bind order |
 | flow-configuration-unconfigured | Configuration | Unconfigured before any Nexus |
-| flow-configuration | Configuration | Nexus, Models, Thresholds, Module whole |
+| flow-configuration | Configuration | exact Configuration: Nexus, Models, Thresholds, Module (false) |
 | flow-configure-nexus | Configure.Nexus | Configured, twice; disagreeing: Refused.Conflict |
 | flow-configure-model-before-nexus | Configure.Model | Configured before any Configure.Nexus |
 | flow-configure-model | Configure.Model | Configured, twice; update: Configured |

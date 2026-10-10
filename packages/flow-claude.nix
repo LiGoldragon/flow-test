@@ -153,11 +153,11 @@ pkgs.writeShellApplication {
         }
       }"
       for layer in ${builtins.concatStringsSep " " flow.layers}; do
-        expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer $model }"
+        expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer Claude $model }"
         expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"
       done
       digest="$(b3sum --no-names "$root/source/psyche-skills/vision/flow.md")"
-      expect "Configure.Module" Configured flow-meta "Configure.Module.{ { Vision flow } { psyche-skills $digest vision/flow.md } }"
+      expect "Configure.Module" Configured flow-meta "Configure.Module.{ { Vision flow } { psyche-skills $digest vision/flow.md } false }"
     }
 
     # Launch: Launched.FlowId; Current is Awake with it; the pane is titled
@@ -199,7 +199,7 @@ pkgs.writeShellApplication {
       new="''${new%% *}"
       expect "Current" "Current.Awake.$new" flow 'Current.{ Mind refresh Secondary }'
       listed="$(reply Metaflows flow Metaflows)"
-      case "$listed" in *"{ Mind refresh Secondary } Awake.$new [ $old ]"*) ;; *) return 1 ;; esac
+      case "$listed" in *"{ { Mind refresh Secondary } Awake.$new [ $old ] [] }"*) ;; *) return 1 ;; esac
     }
 
     # Locked: a Lock while a refresh is under way is refused Locked.

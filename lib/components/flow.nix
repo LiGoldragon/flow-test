@@ -1,7 +1,7 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
 # XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary c82223e93).
+# design gives it (f5a6e9 flow-buildable-design at Primary 9b006dd2b).
 { inputs }:
 {
   forSystem = system: rec {
@@ -21,13 +21,6 @@
       "Tertiary"
       "Quaternary"
     ];
-
-    # Configure.Model.{ Layer Native }: the layer's model as the harness
-    # knows it.
-    modelPayload = layer: model: "Configure.Model.{ ${layer} ${model} }";
-
-    # Configure.Threshold.{ Layer Handover Refresh }, percent of the window.
-    thresholdPayload = layer: "Configure.Threshold.{ ${layer} 20 40 }";
 
     # The Message stand-in's own binary: a copy of the flow client in its own
     # store path, named message-helper. Configure.Nexus names it as

@@ -15,7 +15,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     expect("Configure.Nexus with Lease 3", meta(nexus_payload(3)), "Configured")
     for layer in LAYERS:
-        expect(f"Configure.Model {layer}", meta(f"Configure.Model.{{ {layer} {MODEL} }}"), "Configured")
+        expect(f"Configure.Model {layer}", meta(model_payload(layer)), "Configured")
     awake(PSYCHE, "psyche")
     pane, _, _ = awake("{ Mind nexus Secondary }", "mind")
     now = int(machine.succeed("date +%s").strip())

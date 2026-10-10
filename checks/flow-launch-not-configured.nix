@@ -13,7 +13,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     for layer in LAYERS:
-        expect(f"Configure.Model {layer}", meta(f"Configure.Model.{{ {layer} {MODEL} }}"), "Configured")
+        expect(f"Configure.Model {layer}", meta(model_payload(layer)), "Configured")
     expect("Launch before Configure.Nexus", flow("Launch.{ { Mind launch Secondary } [ ] «Design nothing.» }"), "Refused.NotConfigured")
   '';
 }
