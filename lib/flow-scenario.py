@@ -193,12 +193,6 @@ def in_pane(pane, command):
     return code, reply
 
 
-def expect_in_pane(label, pane, command, want, prefix=False):
-    code, got = in_pane(pane, command)
-    met = got.startswith(want) if prefix else got == want
-    return judge(label, got, code, met, f"«{want}{'…' if prefix else ''}»")
-
-
 def pane_shows(label, pane, text):
     status, out = run(f"herdr pane wait-output {pane} --match {shlex.quote(text)} --timeout 15000")
     return judge(label, f"pane {pane} shows «{text}»" if status == 0 else out, status, status == 0, f"pane shows «{text}»")
@@ -209,7 +203,21 @@ def pane_lacks(label, pane, text):
     return judge(label, f"pane {pane} {'shows' if text in out else 'lacks'} «{text}»", 0, text not in out, f"pane lacks «{text}»")
 
 
-# Locked.{ Address Until } → (the lock as written, Until).
+# The sender most scenarios lock from: Message identifies a sender through
+# Identify and passes it as the Lock's Sender.
+PSYCHE = "{ Psyche nexus Secondary }"
+
+
+# Lock.{ Sender Recipient }, Recipient.[ Address Up ]: an address is
+# written as the variant `Address.{ Mind nexus Secondary }`, a lock up as
+# `Up`, resolved by Flow relative to the Sender.
+def lock_datom(sender, recipient):
+    target = "Up" if recipient == "Up" else f"Address.{recipient}"
+    return f"Lock.{{ {sender} {target} }}"
+
+
+# Locked.Lock → (the lock as written, its Until). The lock carries the
+# resolved Address and the Sender; Until is its one integer.
 def lock_of(reply):
     body = reply[len("Locked."):]
     numbers = re.findall(r"\d+", body)
@@ -218,9 +226,14 @@ def lock_of(reply):
     return body, int(numbers[-1])
 
 
-def lock(address, label="Lock"):
-    reply = expect_prefix(f"{label} {address}", flow(f"Lock.Address.{address}"), "Locked.")
+def lock(sender, recipient, label="Lock"):
+    reply = expect_prefix(f"{label} {recipient} from {sender}", flow(lock_datom(sender, recipient)), "Locked.")
     return lock_of(reply)
+
+
+# Deliver.{ Lock Request }: the sender is inside the lock.
+def deliver(held, request):
+    return flow(f"Deliver.{{ {held} {request} }}")
 
 
 def set_clock_past(until):

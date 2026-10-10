@@ -1,6 +1,6 @@
-# Lock.Up from a pane bound to { Mind nexus Secondary }: Flow identifies
-# the sender by process and resolves Up to the layer above within its
-# aspect, answering Locked.{ { Mind nexus Primary } Until }.
+# Lock.{ Sender Up } with Sender { Mind nexus Secondary }: Flow resolves Up
+# relative to the Sender, the layer above within its aspect, and answers
+# Locked.Lock carrying { Mind nexus Primary }.
 # Target: mind.
 {
   pkgs,
@@ -14,7 +14,8 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     awake("{ Mind nexus Primary }", "primary")
-    pane, _, _ = awake("{ Mind nexus Secondary }", "secondary")
-    expect_in_pane("Lock.Up from the Secondary", pane, flow("Lock.Up"), "Locked.{ { Mind nexus Primary } ", prefix=True)
+    awake("{ Mind nexus Secondary }", "secondary")
+    held, _ = lock("{ Mind nexus Secondary }", "Up")
+    expect_true("the lock carries the resolved Address", "{ Mind nexus Primary }" in held, held)
   '';
 }

@@ -1,5 +1,5 @@
 # Deliver under a lock taken before the metaflow ended:
-# Refused.Ended.{ Mind nexus Secondary }, and the pane never shows it.
+# Refused.Ended.{ Mind nexus Secondary }.
 # Target: mind.
 {
   pkgs,
@@ -12,10 +12,10 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    awake("{ Psyche nexus Secondary }", "psyche")
-    pane, _, _ = awake("{ Mind nexus Secondary }", "mind")
-    held, _ = lock("{ Mind nexus Secondary }")
+    awake(PSYCHE, "psyche")
+    awake("{ Mind nexus Secondary }", "mind")
+    held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
     expect("End", flow("End.{ Mind nexus Secondary }"), "Ended")
-    expect("Deliver", flow(f"Deliver.{{ {held} {{ Psyche nexus Secondary }} Order.«ftDeliverEnded» }}"), "Refused.Ended.{ Mind nexus Secondary }")
+    expect("Deliver", deliver(held, "Order.«ftDeliverEnded»"), "Refused.Ended.{ Mind nexus Secondary }")
   '';
 }

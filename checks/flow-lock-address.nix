@@ -1,5 +1,6 @@
-# Lock.Recipient with an Address on an awake metaflow:
-# Locked.{ { Mind nexus Secondary } Until }, Until in the future.
+# Lock.{ Sender Recipient } with an Address, from { Psyche nexus
+# Secondary } to the awake { Mind nexus Secondary }: Locked.Lock, the lock
+# carrying the Address and an Until in the future.
 # Target: mind.
 {
   pkgs,
@@ -12,10 +13,11 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
+    awake(PSYCHE, "psyche")
     awake("{ Mind nexus Secondary }", "mind")
     now = int(machine.succeed("date +%s").strip())
-    reply = expect_prefix("Lock", flow("Lock.Address.{ Mind nexus Secondary }"), "Locked.{ { Mind nexus Secondary } ")
-    _, until = lock_of(reply)
+    held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
+    expect_true("the lock carries the Address", "{ Mind nexus Secondary }" in held, held)
     expect_true("Until is after now", until > now, f"Until {until}, now {now}")
   '';
 }

@@ -169,7 +169,7 @@ pkgs.writeShellApplication {
       launch '{ Mind locked Secondary }' 'Reply ok, then stop.' > /dev/null
       flow 'Refresh.{ Mind locked Secondary }' > "$root/refresh-locked.reply" 2>&1 &
       sleep 1
-      expect "Lock during the refresh" Refused.Locked flow 'Lock.Address.{ Mind locked Secondary }'
+      expect "Lock during the refresh" Refused.Locked flow 'Lock.{ { Psyche locked Secondary } Address.{ Mind locked Secondary } }'
       wait
     }
 
@@ -182,9 +182,9 @@ pkgs.writeShellApplication {
         [ -n "$transcript" ] && grep -q '"tool_use"' "$transcript" && break
         sleep 0.5
       done
-      locked="$(reply Lock flow 'Lock.Address.{ Mind busy Secondary }')"
+      locked="$(reply Lock flow 'Lock.{ { Psyche busy Secondary } Address.{ Mind busy Secondary } }')"
       case "$locked" in Locked.*) ;; *) return 1 ;; esac
-      expect "Deliver to the busy flow" Queued flow "Deliver.{ ''${locked#Locked.} { Psyche busy Secondary } Order.«ftBusy reply received» }"
+      expect "Deliver to the busy flow" Queued flow "Deliver.{ ''${locked#Locked.} Order.«ftBusy reply received» }"
       for _ in $(seq 1 1200); do grep -q ftBusy "$transcript" && break; sleep 0.5; done
       count="$(jq -s '[.[] | select(.type == "user") | tostring | select(test("ftBusy"))] | length' "$transcript")"
       echo "the transcript holds the Order $count times"

@@ -13,10 +13,11 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
+    awake(PSYCHE, "psyche")
     awake("{ Mind nexus Secondary }", "mind")
-    held, until = lock("{ Mind nexus Secondary }", "first Lock")
-    expect("second Lock", flow("Lock.Address.{ Mind nexus Secondary }"), f"Refused.Held.{held}")
+    held, until = lock(PSYCHE, "{ Mind nexus Secondary }", "first Lock")
+    expect("second Lock", flow(lock_datom(PSYCHE, "{ Mind nexus Secondary }")), f"Refused.Held.{held}")
     set_clock_past(until)
-    lock("{ Mind nexus Secondary }", "Lock after the lapse")
+    lock(PSYCHE, "{ Mind nexus Secondary }", "Lock after the lapse")
   '';
 }

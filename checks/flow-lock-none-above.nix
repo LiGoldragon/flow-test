@@ -1,4 +1,4 @@
-# Lock.Up from a pane bound to { Mind nexus Primary }, the top of its
+# Lock.{ Sender Up } with Sender { Mind nexus Primary }, the top of its
 # aspect: Refused.NoneAbove.
 # Target: mind.
 {
@@ -12,7 +12,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    pane, _, _ = awake("{ Mind nexus Primary }", "primary")
-    expect_in_pane("Lock.Up from the Primary", pane, flow("Lock.Up"), "Refused.NoneAbove")
+    awake("{ Mind nexus Primary }", "primary")
+    expect("Lock Up from the Primary", flow(lock_datom("{ Mind nexus Primary }", "Up")), "Refused.NoneAbove")
   '';
 }

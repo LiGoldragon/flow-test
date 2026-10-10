@@ -5,9 +5,11 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-e846c2ca1. Lock is `Lock.Recipient`, written `Lock.Address.{ Mind nexus
-Secondary }` or `Lock.Up`; Flow resolves Up from the sender it identifies by
-process.
+e846c2ca1, with f5a6e9's later ruling on the lock: `Lock.{ Sender Recipient }`,
+written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
+or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
+Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
+`NoneAbove`. Deliver is `Deliver.{ Lock Request }`, the sender inside the lock.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
 lands, `nix flake update flow` and commit the lock.
@@ -56,10 +58,9 @@ expected-failing:
 | flow-end | End | Ended; Current.Ended |
 | flow-end-unknown | End | Refused.Unknown.Address |
 | flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
-| flow-lock-address | Lock | Locked.{ Address Until } |
-| flow-lock-up | Lock | Up resolved: Locked.{ { Mind nexus Primary } Until } |
+| flow-lock-address | Lock | Locked.Lock carrying the Address and an Until |
+| flow-lock-up | Lock | Up resolved from the Sender: the lock carries { Mind nexus Primary } |
 | flow-lock-none-above | Lock | Refused.NoneAbove |
-| flow-lock-unidentified | Lock | Refused.Unidentified.Process |
 | flow-lock-held | Lock | Refused.Held.Lock; granted after the lapse |
 | flow-lock-unknown | Lock | Refused.Unknown.Address |
 | flow-lock-ended | Lock | Refused.Ended.Address |
@@ -67,7 +68,7 @@ expected-failing:
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
 | flow-deliver-ended | Deliver | Refused.Ended.Address |
 | flow-deliver-lapsed | Deliver | Refused.Lapsed |
-| flow-deliver-off-route | Deliver | Refused.OffRoute |
+| flow-deliver-off-route | Lock, Deliver | Refused.OffRoute at the Lock or the Deliver |
 | flow-release | Release | Released; Lock granted again |
 | flow-identify | Identify | Identified.Address, shell and descendant |
 | flow-identify-unidentified | Identify | Refused.Unidentified.Process, unbound and reused pid |

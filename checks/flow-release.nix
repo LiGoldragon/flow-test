@@ -12,9 +12,10 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
+    awake(PSYCHE, "psyche")
     awake("{ Mind nexus Secondary }", "mind")
-    held, _ = lock("{ Mind nexus Secondary }")
+    held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
     expect("Release", flow(f"Release.{held}"), "Released")
-    lock("{ Mind nexus Secondary }", "Lock after Release")
+    lock(PSYCHE, "{ Mind nexus Secondary }", "Lock after Release")
   '';
 }

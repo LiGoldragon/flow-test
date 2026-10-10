@@ -12,11 +12,11 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    awake("{ Psyche nexus Secondary }", "psyche")
+    awake(PSYCHE, "psyche")
     pane, _, _ = awake("{ Mind nexus Secondary }", "mind")
-    held, until = lock("{ Mind nexus Secondary }")
+    held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
     set_clock_past(until)
-    expect("Deliver", flow(f"Deliver.{{ {held} {{ Psyche nexus Secondary }} Order.«ftDeliverLapsed» }}"), "Refused.Lapsed")
+    expect("Deliver", deliver(held, "Order.«ftDeliverLapsed»"), "Refused.Lapsed")
     pane_lacks("recipient pane", pane, "ftDeliverLapsed")
   '';
 }
