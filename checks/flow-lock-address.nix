@@ -17,7 +17,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake("{ Mind nexus Secondary }", "mind")
     now = int(machine.succeed("date +%s").strip())
     held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
-    expect_true("the lock carries the Address", "{ Mind nexus Secondary }" in held, held)
+    expect_true("the lock is { Sender Address Until }", held == f"{{ {PSYCHE} {{ Mind nexus Secondary }} {until} }}", held)
     expect_true("Until is after now", until > now, f"Until {until}, now {now}")
   '';
 }

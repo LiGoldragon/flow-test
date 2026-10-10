@@ -15,7 +15,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     awake("{ Mind nexus Primary }", "primary")
     awake("{ Mind nexus Secondary }", "secondary")
-    held, _ = lock("{ Mind nexus Secondary }", "Up")
-    expect_true("the lock carries the resolved Address", "{ Mind nexus Primary }" in held, held)
+    held, until = lock("{ Mind nexus Secondary }", "Up")
+    expect_true("the lock is { Sender Address Until }, Address resolved", held == f"{{ {{ Mind nexus Secondary }} {{ Mind nexus Primary }} {until} }}", held)
   '';
 }

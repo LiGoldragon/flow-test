@@ -216,8 +216,8 @@ def lock_datom(sender, recipient):
     return f"Lock.{{ {sender} {target} }}"
 
 
-# Locked.Lock → (the lock as written, its Until). The lock carries the
-# resolved Address and the Sender; Until is its one integer.
+# Locked.Lock → (the lock as written, its Until). The Lock is
+# { Sender Address Until }: Until, the lapse time, is its one integer.
 def lock_of(reply):
     body = reply[len("Locked."):]
     numbers = re.findall(r"\d+", body)
