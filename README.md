@@ -94,6 +94,7 @@ expected-failing:
 | flow-lock-lease | Lock | Lease 3 s: Until 3 s away; Lapsed after it |
 | flow-lock-unknown | Lock | Refused.Unknown.Address |
 | flow-lock-unknown-sender | Lock | Refused.Unknown.Address, the sender's address |
+| flow-lock-asleep-recipient | Lock | Asleep recipient: Locked |
 | flow-lock-ended | Lock | Refused.Ended.Address |
 | flow-lock-asleep-sender | Lock | Sender Asleep: Refused.Asleep |
 | flow-lock-ended-sender | Lock | Sender Ended: Refused.Ended.Address |
@@ -101,6 +102,7 @@ expected-failing:
 | flow-lock-not-message | Lock | from a peer not Message: Refused.NotMessage |
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
+| flow-deliver-ended-lapsed | Deliver | lock lapsed, recipient then ended: Refused.Lapsed |
 | flow-deliver-lapsed | Deliver | Refused.Lapsed |
 | flow-deliver-unknown-lock | Deliver | Refused.Unknown.Lock |
 | flow-release | Release | Released; Lock granted again |
@@ -108,6 +110,7 @@ expected-failing:
 | flow-release-lapsed | Release | Refused.Lapsed |
 | flow-release-unknown | Release | Refused.Unknown.Lock |
 | flow-identify | Identify | Identified.Address, shell and descendant |
+| flow-identify-not-message | Identify | from a peer not Message, Message bound: Identified |
 | flow-identify-unidentified | Identify | Refused.Unidentified.Process, unbound and reused pid |
 | flow-report | Report | Reported for each Event |
 | flow-report-unknown | Report | Refused.Unknown.FlowId |
