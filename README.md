@@ -84,7 +84,7 @@ expected-failing:
 | flow-end-held | End | Refused.Held.Lock; Ended after Release |
 | flow-start | start command | Start.{ ordinary meta store } binds both sockets, opens the store there |
 | flow-restart | start command | restart on its own store: Metaflows lists the bound metaflow |
-| flow-start-foreign-store | start command | random bytes at StorePath: Refused.Store.{ Path Reason }, non-zero exit |
+| flow-start-foreign-store | start command | random bytes at StorePath: Store.{ Path «Reason» }, non-zero exit |
 | flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
 | flow-lock-address | Lock | Locked.{ Sender Address Until }, Until 60 s away |
 | flow-lock-up | Lock | Up resolved from the Sender to { Mind nexus Primary } |
