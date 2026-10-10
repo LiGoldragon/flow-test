@@ -16,7 +16,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     pane, _, _ = awake("{ Mind nexus Secondary }", "mind")
     held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
     set_clock_past(until)
-    expect("Deliver", deliver(held, "Order.«ftDeliverLapsed»"), "Refused.Lapsed")
+    expect_message("Deliver", deliver(held, "Order.«ftDeliverLapsed»"), "Refused.Lapsed")
     pane_lacks("recipient pane", pane, "ftDeliverLapsed")
   '';
 }

@@ -18,9 +18,9 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake(PSYCHE, "psyche")
     pane, _, _ = awake("{ Mind nexus Secondary }", "mind")
     held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
-    expect("Deliver", deliver(held, "Order.«ftDelivered build the lock path»"), "Delivered")
+    expect_message("Deliver", deliver(held, "Order.«ftDelivered build the lock path»"), "Delivered")
     pane_shows("recipient pane", pane, "ftDelivered")
-    expect("second Deliver", deliver(held, "Order.«ftDeliveredTwice»"), f"Refused.Unknown.Lock.{held}")
+    expect_message("second Deliver", deliver(held, "Order.«ftDeliveredTwice»"), f"Refused.Unknown.Lock.{held}")
     lock(PSYCHE, "{ Mind nexus Secondary }", "Lock after the Deliver")
   '';
 }

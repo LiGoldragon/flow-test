@@ -13,6 +13,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     awake("{ Mind nexus Primary }", "primary")
-    expect("Lock Up from the Primary", flow(lock_datom("{ Mind nexus Primary }", "Up")), "Refused.NoneAbove")
+    expect_message("Lock Up from the Primary", lock_datom("{ Mind nexus Primary }", "Up"), "Refused.NoneAbove")
   '';
 }

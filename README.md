@@ -13,9 +13,12 @@ Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
 the sender inside the lock. A Key is the pair, `{ Vision flow }`, also in `Configure.Module.{ { Vision
 flow } { Repository Hash Path } }` as the design's example writes it. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
-`Refused.Unknown.Address.{ Mind ghost Secondary }`. Configure.Nexus
-holds no socket paths (the start command gives them) and ends with `Lease`,
-seconds, 60 until it is set; the scenarios still send it first. Where the design left a case open,
+`Refused.Unknown.Address.{ Mind ghost Secondary }`. The Nexus starts as
+`flow-nexus 'Start.{ <ordinary socket> <meta socket> }'`. Configure.Nexus
+holds no socket paths, carries full CodexEndpoint and HarnessProfile values
+(meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>), and ends with `Lease`,
+seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release run inside a pane whose shell is bound as
+`{ Mind message Secondary }`, Message's stand-in. Where the design left a case open,
 the scenarios follow f5a6e9's rulings (current best) given to this repository.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
@@ -71,6 +74,7 @@ expected-failing:
 | flow-end-unknown | End | Refused.Unknown.Address |
 | flow-end-ended | End | Refused.Ended.Address |
 | flow-end-held | End | Refused.Held.Lock; Ended after Release |
+| flow-start | start command | Start.{ ordinary meta } binds both named sockets |
 | flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
 | flow-lock-address | Lock | Locked.{ Sender Address Until }, Until 60 s away |
 | flow-lock-up | Lock | Up resolved from the Sender to { Mind nexus Primary } |
@@ -82,6 +86,7 @@ expected-failing:
 | flow-lock-unknown-sender | Lock | Refused.Unknown.Address, the sender's address |
 | flow-lock-ended | Lock | Refused.Ended.Address |
 | flow-lock-off-route | Lock | Refused.OffRoute |
+| flow-lock-not-message | Lock | from a peer not Message: Refused.NotMessage |
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
 | flow-deliver-ended | Deliver | Refused.Ended.Address |
@@ -100,6 +105,8 @@ expected-failing:
 | flow-stop | Stop | Stopped; Current.Asleep |
 | flow-stop-unknown | Stop | Refused.Unknown.FlowId |
 | flow-metaflows | Metaflows | Listed, awake and asleep |
+| flow-configuration-unconfigured | Configuration | Unconfigured before any Nexus |
+| flow-configuration | Configuration | Nexus, Models, Thresholds, Module whole |
 | flow-configure-nexus | Configure.Nexus | Configured, twice; disagreeing: Refused.Conflict |
 | flow-configure-model-before-nexus | Configure.Model | Configured before any Configure.Nexus |
 | flow-configure-model | Configure.Model | Configured, twice; update: Configured |

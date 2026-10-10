@@ -13,6 +13,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     awake(PSYCHE, "psyche")
-    expect("Lock ghost", flow(lock_datom(PSYCHE, "{ Mind ghost Secondary }")), "Refused.Unknown.Address.{ Mind ghost Secondary }")
+    expect_message("Lock ghost", lock_datom(PSYCHE, "{ Mind ghost Secondary }"), "Refused.Unknown.Address.{ Mind ghost Secondary }")
   '';
 }

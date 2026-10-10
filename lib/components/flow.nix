@@ -29,18 +29,40 @@
     # Configure.Threshold.{ Layer Handover Refresh }, percent of the window.
     thresholdPayload = layer: "Configure.Threshold.{ ${layer} 20 40 }";
 
+    # The Nexus's start command: one datom naming its two listening sockets.
+    startArgument = runtime: "Start.{ ${runtime}/${ordinarySocket} ${runtime}/${metaSocket} }";
+
     # Configure.Nexus.{ SourceRoot StableCodex NextCodex HarnessProfiles
-    # MetaAspects MessageNexusPath Lease }. The listening sockets come from
-    # the Nexus's start command (none: the defaults), not from Configure;
-    # Lease is a lock's span in seconds (60 until Configure.Nexus sets it).
-    nexusPayload = runtime: sourceRoot: lease: ''
-      Configure.Nexus.{ ${sourceRoot}
-                        codex-stable-flow-client
-                        codex-next-flow-client
-                        [ claude ]
-                        [ Psyche Mind Field ]
-                        ${runtime}/message/message.sock
-                        ${lease} }
-    '';
+    # MetaAspects MessageNexusPath Lease }, with full values in the shapes
+    # meta-signal-flow's ethos/signal.ethos declares at the revision Flow
+    # 0.25.0 pins (88f3759):
+    #   CodexEndpoint.{ ClientPath Home ControlSocketPath Vector<ModelName> }
+    #   HarnessProfile.{ HarnessKind Vector<CommandSigil> InterruptKeys
+    #                    SubmitKeys }
+    # The values are Flow 0.25.0's defaults. Lease is a lock's span in
+    # seconds (60 until Configure.Nexus sets it).
+    nexusPayload =
+      {
+        runtime,
+        home,
+        sourceRoot,
+        lease,
+      }:
+      ''
+        Configure.Nexus.{ ${sourceRoot}
+                          { codex-stable-flow-client
+                            ${home}/.codex
+                            ${home}/.codex/app-server-control/app-server-control.sock
+                            [ gpt-5.6-terra gpt-5.6-sol gpt-5.6-luna ] }
+                          { codex-next-flow-client
+                            ${home}/.codex-next
+                            ${home}/.codex-next/app-server-control/app-server-control.sock
+                            [ gpt-6-sol gpt-6-luna gpt-6-astra ] }
+                          [ { Claude [ «/» «!» «#» ] [ esc esc ] [ enter ] }
+                            { Codex [ «/» «!» ] [ esc ] [ ] } ]
+                          [ Psyche Mind Field ]
+                          ${runtime}/message/message.sock
+                          ${lease} }
+      '';
   };
 }

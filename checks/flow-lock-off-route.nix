@@ -15,6 +15,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     awake("{ Field ghost Tertiary }", "field")
     awake("{ Psyche core Primary }", "psyche")
-    expect("Lock off route", flow(lock_datom("{ Field ghost Tertiary }", "{ Psyche core Primary }")), "Refused.OffRoute")
+    expect_message("Lock off route", lock_datom("{ Field ghost Tertiary }", "{ Psyche core Primary }"), "Refused.OffRoute")
   '';
 }

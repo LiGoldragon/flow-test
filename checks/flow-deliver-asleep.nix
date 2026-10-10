@@ -15,7 +15,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake(PSYCHE, "psyche")
     asleep("{ Mind nexus Secondary }", "mind")
     held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
-    expect("Deliver a Notice", deliver(held, "Notice.«ftDeliverNotice»"), "Queued")
+    expect_message("Deliver a Notice", deliver(held, "Notice.«ftDeliverNotice»"), "Queued")
     expect("Current after", flow("Current.{ Mind nexus Secondary }"), "Current.Asleep")
     listed = expect_prefix("Metaflows", flow("Metaflows"), "Listed.")
     expect_true("the Queue holds the Notice", "Notice.«ftDeliverNotice»" in listed, listed)

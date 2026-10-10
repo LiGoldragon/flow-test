@@ -60,7 +60,7 @@ pkgs.testers.runNixOSTest {
         wantedBy = [ "default.target" ];
         unitConfig.ConditionUser = "alice";
         environment.RUST_LOG = "debug";
-        serviceConfig.ExecStart = flow.nexus;
+        serviceConfig.ExecStart = "${flow.nexus} \"${flow.startArgument runtime}\"";
       };
       herdr = {
         wantedBy = [ "default.target" ];
@@ -79,7 +79,13 @@ pkgs.testers.runNixOSTest {
     SOURCE_ROOT = "${sourceRoot}"
     LAYERS = ${builtins.toJSON flow.layers}
     MODEL = "${flake.lib.cheapestModel.claude}"
-    NEXUS_TEMPLATE = """${flow.nexusPayload runtime sourceRoot "LEASE"}"""
+    NEXUS_TEMPLATE = """${
+      flow.nexusPayload {
+        inherit runtime sourceRoot;
+        home = "/home/alice";
+        lease = "LEASE";
+      }
+    }"""
     ${builtins.readFile ./flow-scenario.py}
 
     def drive():

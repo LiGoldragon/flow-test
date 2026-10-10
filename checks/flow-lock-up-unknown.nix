@@ -14,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     configure()
     awake("{ Mind nexus Secondary }", "secondary")
-    expect("Lock Up to no metaflow", flow(lock_datom("{ Mind nexus Secondary }", "Up")), "Refused.Unknown.Address.{ Mind nexus Primary }")
+    expect_message("Lock Up to no metaflow", lock_datom("{ Mind nexus Secondary }", "Up"), "Refused.Unknown.Address.{ Mind nexus Primary }")
   '';
 }

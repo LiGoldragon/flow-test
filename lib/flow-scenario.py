@@ -233,14 +233,37 @@ def lock_of(reply):
     return body, int(numbers[-1])
 
 
+# The Message stand-in: Lock, Deliver and Release are accepted only from
+# the Message Nexus's process, which Message binds at its start under its
+# own address. Here a pane's shell is bound as Message and those requests
+# run inside it, so Flow finds Message's process among the caller's
+# ancestors (as Identify walks them).
+MESSAGE = "{ Mind message Secondary }"
+MESSAGE_PANE = []
+
+
+def message_pane():
+    if not MESSAGE_PANE:
+        pane, pid = open_pane("message")
+        bind(MESSAGE, pid)
+        MESSAGE_PANE.append(pane)
+    return MESSAGE_PANE[0]
+
+
+def expect_message(label, datom, want, prefix=False):
+    code, got = in_pane(message_pane(), flow(datom))
+    met = got.startswith(want) if prefix else got == want
+    return judge(label, got, code, met, f"«{want}{'…' if prefix else ''}»")
+
+
 def lock(sender, recipient, label="Lock"):
-    reply = expect_prefix(f"{label} {recipient} from {sender}", flow(lock_datom(sender, recipient)), "Locked.")
+    reply = expect_message(f"{label} {recipient} from {sender}", lock_datom(sender, recipient), "Locked.", prefix=True)
     return lock_of(reply)
 
 
 # Deliver.{ Lock Request }: the sender is inside the lock.
 def deliver(held, request):
-    return flow(f"Deliver.{{ {held} {request} }}")
+    return f"Deliver.{{ {held} {request} }}"
 
 
 def set_clock_past(until):

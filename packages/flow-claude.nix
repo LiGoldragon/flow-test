@@ -63,7 +63,7 @@ pkgs.writeShellApplication {
     cp -r ${../fixtures/flow/source}/. "$root/source/"
     SHELL="${pkgs.bashInteractive}/bin/bash" herdr server > "$root/herdr.log" 2>&1 &
     pids+=($!)
-    RUST_LOG=debug ${flow.nexus} 2> "$root/flow-nexus.log" &
+    RUST_LOG=debug ${flow.nexus} "Start.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} }" 2> "$root/flow-nexus.log" &
     pids+=($!)
 
     for socket in ${flow.ordinarySocket} ${flow.metaSocket}; do
@@ -113,7 +113,14 @@ pkgs.writeShellApplication {
     }
 
     configureAll() {
-      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock 60 }"
+      expect "Configure.Nexus" Configured flow-meta "${
+        flow.nexusPayload {
+          runtime = "$XDG_RUNTIME_DIR";
+          home = "$HOME";
+          sourceRoot = "$root/source";
+          lease = "60";
+        }
+      }"
       for layer in ${builtins.concatStringsSep " " flow.layers}; do
         expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer $model }"
         expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"

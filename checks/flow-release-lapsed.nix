@@ -15,6 +15,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake("{ Mind nexus Secondary }", "mind")
     held, until = lock(PSYCHE, "{ Mind nexus Secondary }")
     set_clock_past(until)
-    expect("Release lapsed", flow(f"Release.{held}"), "Refused.Lapsed")
+    expect_message("Release lapsed", f"Release.{held}", "Refused.Lapsed")
   '';
 }
