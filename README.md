@@ -77,7 +77,7 @@ expected-failing:
 | flow-refresh-ended | Refresh | Refused.Ended.Address |
 | flow-refresh-asleep | Refresh | Refused.Asleep |
 | flow-refresh-held | Refresh | Refused.Held.Lock |
-| flow-end | End | Ended; Current.Ended |
+| flow-end | End | Ended; Current.Ended; Listed Ended [ id ] [] |
 | flow-end-unknown | End | Refused.Unknown.Address |
 | flow-end-ended | End | Refused.Ended.Address |
 | flow-end-held | End | Refused.Held.Lock; Ended after Release |
