@@ -14,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     configure()
     expect("Configure.Module", meta(module_payload(module_hash())), "Configured")
     expect("Forget", meta("Forget.{ Vision flow }"), "Forgotten")
-    expect_prefix("Launch with vision-flow", flow("Launch.{ { Mind launch Secondary } [ vision-flow ] «Design nothing.» }"), "Refused.UnknownModule.")
+    expect_prefix("Launch with vision-flow", flow("Launch.{ { Mind launch Secondary } [ { Vision flow } ] «Design nothing.» }"), "Refused.UnknownModule.")
   '';
 }

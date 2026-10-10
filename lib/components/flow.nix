@@ -30,9 +30,10 @@
     thresholdPayload = layer: "Configure.Threshold.{ ${layer} 20 40 }";
 
     # Configure.Nexus.{ OrdinarySocketPath MetaSocketPath SourceRoot
-    # StableCodex NextCodex HarnessProfiles MetaAspects MessageNexusPath },
-    # every path the default one so no restart is asked.
-    nexusPayload = runtime: sourceRoot: ''
+    # StableCodex NextCodex HarnessProfiles MetaAspects MessageNexusPath
+    # Lease }, every path the default one so no restart is asked; Lease is
+    # a lock's span in seconds (60 by default).
+    nexusPayload = runtime: sourceRoot: lease: ''
       Configure.Nexus.{ ${runtime}/${ordinarySocket}
                         ${runtime}/${metaSocket}
                         ${sourceRoot}
@@ -40,7 +41,8 @@
                         codex-next-flow-client
                         [ claude ]
                         [ Psyche Mind Field ]
-                        ${runtime}/message/message.sock }
+                        ${runtime}/message/message.sock
+                        ${lease} }
     '';
   };
 }

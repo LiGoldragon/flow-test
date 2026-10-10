@@ -13,7 +13,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure(layers=["Primary"])
-    expect("Configure.Module vision-flow", meta(module_payload(module_hash())), "Configured")
-    expect("Launch at Tertiary", flow("Launch.{ { Mind launch Tertiary } [ vision-flow ] «Design nothing.» }"), "Refused.NoLayer")
+    expect("Configure.Module { Vision flow }", meta(module_payload(module_hash())), "Configured")
+    expect("Launch at Tertiary", flow("Launch.{ { Mind launch Tertiary } [ { Vision flow } ] «Design nothing.» }"), "Refused.NoLayer")
   '';
 }

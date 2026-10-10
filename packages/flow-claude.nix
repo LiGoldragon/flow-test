@@ -108,12 +108,12 @@ pkgs.writeShellApplication {
       jq -rs '[.[] | select(.type == "user")][0].message.content | if type == "string" then . else map(.text // "") | join("") end' "$1"
     }
     launch() {
-      launched="$(reply "Launch $1" flow "Launch.{ $1 [ vision-flow ] «$2» }")"
+      launched="$(reply "Launch $1" flow "Launch.{ $1 [ { Vision flow } ] «$2» }")"
       case "$launched" in Launched.*) echo "''${launched#Launched.}" ;; *) return 1 ;; esac
     }
 
     configureAll() {
-      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock }"
+      expect "Configure.Nexus" Configured flow-meta "Configure.Nexus.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} $root/source codex-stable-flow-client codex-next-flow-client [ claude ] [ Psyche Mind Field ] $XDG_RUNTIME_DIR/message/message.sock 60 }"
       for layer in ${builtins.concatStringsSep " " flow.layers}; do
         expect "Configure.Model $layer" Configured flow-meta "Configure.Model.{ $layer $model }"
         expect "Configure.Threshold $layer" Configured flow-meta "Configure.Threshold.{ $layer 20 40 }"

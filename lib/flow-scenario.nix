@@ -79,7 +79,7 @@ pkgs.testers.runNixOSTest {
     SOURCE_ROOT = "${sourceRoot}"
     LAYERS = ${builtins.toJSON flow.layers}
     MODEL = "${flake.lib.cheapestModel.claude}"
-    NEXUS_PAYLOAD = """${flow.nexusPayload runtime sourceRoot}"""
+    NEXUS_TEMPLATE = """${flow.nexusPayload runtime sourceRoot "LEASE"}"""
     ${builtins.readFile ./flow-scenario.py}
 
     def drive():

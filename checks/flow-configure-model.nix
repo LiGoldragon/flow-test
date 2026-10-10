@@ -1,5 +1,6 @@
-# Configure.Model.{ Primary haiku }: Configured; again: Configured; a
-# disagreeing model for the same layer: Refused.Conflict.
+# Configure.Model.{ Primary haiku }: Configured; again: Configured; another
+# model for the same layer is an update (Conflict is only for Nexus setup
+# payloads): Configured.
 # Target: mind.
 {
   pkgs,
@@ -13,6 +14,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     expect("Configure.Model", meta("Configure.Model.{ Primary haiku }"), "Configured")
     expect("Configure.Model again", meta("Configure.Model.{ Primary haiku }"), "Configured")
-    expect("Configure.Model disagreeing", meta("Configure.Model.{ Primary sonnet }"), "Refused.Conflict")
+    expect("Configure.Model updated", meta("Configure.Model.{ Primary sonnet }"), "Configured")
   '';
 }

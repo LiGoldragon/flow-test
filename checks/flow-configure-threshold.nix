@@ -1,5 +1,5 @@
-# Configure.Threshold.{ Primary 20 40 }: Configured; again: Configured; a
-# disagreeing threshold for the same layer: Refused.Conflict.
+# Configure.Threshold.{ Primary 20 40 }: Configured; again: Configured;
+# other thresholds for the same layer are an update: Configured.
 # Target: mind.
 {
   pkgs,
@@ -13,6 +13,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   script = ''
     expect("Configure.Threshold", meta("Configure.Threshold.{ Primary 20 40 }"), "Configured")
     expect("Configure.Threshold again", meta("Configure.Threshold.{ Primary 20 40 }"), "Configured")
-    expect("Configure.Threshold disagreeing", meta("Configure.Threshold.{ Primary 25 45 }"), "Refused.Conflict")
+    expect("Configure.Threshold updated", meta("Configure.Threshold.{ Primary 25 45 }"), "Configured")
   '';
 }

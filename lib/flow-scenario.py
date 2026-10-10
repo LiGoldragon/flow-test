@@ -116,10 +116,15 @@ def scenario(drive):
         print(f"flow-test {NAME}: expected-failing (Mind target): {miss}")
 
 
+# The Nexus's own configuration with a lock lease in seconds.
+def nexus_payload(lease=60):
+    return NEXUS_TEMPLATE.replace("LEASE", str(lease))
+
+
 # The Nexus's own configuration, then each layer's model and thresholds,
 # over the meta socket. `layers` limits which layers get a model.
 def configure(layers=None):
-    expect("Configure.Nexus", meta(NEXUS_PAYLOAD), "Configured")
+    expect("Configure.Nexus", meta(nexus_payload()), "Configured")
     for layer in layers if layers is not None else LAYERS:
         expect(f"Configure.Model {layer}", meta(f"Configure.Model.{{ {layer} {MODEL} }}"), "Configured")
     for layer in LAYERS:

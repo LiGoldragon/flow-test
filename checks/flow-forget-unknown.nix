@@ -1,4 +1,5 @@
-# Forget of a module the registry does not hold: Refused.Unknown.Topic.
+# Forget of a key the registry does not hold:
+# Refused.UnknownModule.{ Vision ghost }.
 # Target: mind.
 {
   pkgs,
@@ -11,6 +12,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     configure()
-    expect("Forget", meta("Forget.{ Vision ghost }"), "Refused.Unknown.ghost")
+    expect("Forget", meta("Forget.{ Vision ghost }"), "Refused.UnknownModule.{ Vision ghost }")
   '';
 }

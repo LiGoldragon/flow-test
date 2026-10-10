@@ -1,6 +1,6 @@
 # Lock.{ Sender Up } with Sender { Mind nexus Secondary }: Flow resolves Up
-# relative to the Sender, the layer above within its aspect, and answers
-# Locked.Lock carrying { Mind nexus Primary }.
+# relative to the Sender, the same topic one layer above within its aspect,
+# and answers Locked.{ Sender { Mind nexus Primary } Until }.
 # Target: mind.
 {
   pkgs,
@@ -16,6 +16,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     awake("{ Mind nexus Primary }", "primary")
     awake("{ Mind nexus Secondary }", "secondary")
     held, until = lock("{ Mind nexus Secondary }", "Up")
-    expect_true("the lock is { Sender Address Until }, Address resolved", held == f"{{ {{ Mind nexus Secondary }} {{ Mind nexus Primary }} {until} }}", held)
+    expect_true("the lock is { Sender Address Until }, Up resolved", held == f"{{ {{ Mind nexus Secondary }} {{ Mind nexus Primary }} {until} }}", held)
   '';
 }

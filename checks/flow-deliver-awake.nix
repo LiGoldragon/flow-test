@@ -1,7 +1,8 @@
 # Deliver.{ Lock Request } under a lock from { Psyche nexus Secondary } to
-# the awake { Mind nexus Secondary } (same layer, shared topic: on route):
-# Delivered, and the request reaches the recipient's pane. Where in the flow
-# it lands is open (book 17, ruling 3), so only its words are looked for.
+# the awake { Mind nexus Secondary }: Delivered, and the request reaches the
+# recipient's pane (where in the flow it lands is open, book 17 ruling 3, so
+# only its words are looked for). The Deliver ends the lock: a second
+# Deliver under it is Refused.Unknown.Lock, and a new Lock is granted.
 # Target: mind.
 {
   pkgs,
@@ -19,5 +20,7 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
     held, _ = lock(PSYCHE, "{ Mind nexus Secondary }")
     expect("Deliver", deliver(held, "Order.«ftDelivered build the lock path»"), "Delivered")
     pane_shows("recipient pane", pane, "ftDelivered")
+    expect("second Deliver", deliver(held, "Order.«ftDeliveredTwice»"), f"Refused.Unknown.{held}")
+    lock(PSYCHE, "{ Mind nexus Secondary }", "Lock after the Deliver")
   '';
 }
