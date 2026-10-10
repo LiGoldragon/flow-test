@@ -29,6 +29,17 @@
     # Configure.Threshold.{ Layer Handover Refresh }, percent of the window.
     thresholdPayload = layer: "Configure.Threshold.{ ${layer} 20 40 }";
 
+    # The Message stand-in's own binary: a copy of the flow client in its own
+    # store path, named message-helper. Configure.Nexus names it as
+    # MessageNexusBinary, so only a process running it binds as Message,
+    # and the general flow client is another binary to the gate.
+    messageHelper =
+      pkgs:
+      pkgs.runCommand "message-helper" { } ''
+        mkdir -p $out/bin
+        cp ${client} $out/bin/message-helper
+      '';
+
     # The Nexus's start command: one datom naming its two listening sockets.
     startArgument = runtime: "Start.{ ${runtime}/${ordinarySocket} ${runtime}/${metaSocket} }";
 

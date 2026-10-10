@@ -117,9 +117,10 @@ def scenario(drive):
 
 
 # The Nexus's own configuration with a lock lease in seconds.
-# MessageNexusBinary is the flow client's store path unless another is given.
+# MessageNexusBinary is the message-helper's store path unless another is
+# given.
 def nexus_payload(lease=60, binary=None):
-    return NEXUS_TEMPLATE.replace("LEASE", str(lease)).replace("MESSAGE_BINARY", binary or FLOW_CLIENT)
+    return NEXUS_TEMPLATE.replace("LEASE", str(lease)).replace("MESSAGE_BINARY", binary or MESSAGE_HELPER)
 
 
 # The Nexus's own configuration, then each layer's model and thresholds,
@@ -236,20 +237,25 @@ def lock_of(reply):
 
 
 # The Message stand-in. Lock, Deliver and Release are accepted only from
-# the Message Nexus's own process: the connecting peer's pid and start time
-# must equal those bound under Message's address. Each such request runs
-# in a fresh process that waits, is bound as Message (a Bind over a gone
-# process replaces it), and then execs `flow`, keeping its pid and start
-# time, so the bound process is the one that connects.
-# The Bind as Message is made by the `flow` client, the binary
-# Configure.Nexus names as MessageNexusBinary.
+# the bound Message process, its pid, start time and executable (resolved)
+# matching; a Bind as Message only from MessageNexusBinary, here
+# message-helper (a copy of the flow client in its own store path). Each
+# gated request runs in a fresh process that waits, is bound as Message by
+# message-helper (a Bind over a gone process replaces it), and then execs
+# `binary` (message-helper unless a scenario gives another), keeping its
+# pid and start time, so the bound process is the one that connects.
 MESSAGE = "{ Field message Primary }"
 MESSAGE_RUNS = [0]
 
 
-# `binary` is what the bound process execs after the Bind: the flow client
-# unless a scenario gives another.
-def as_message(datom, binary="flow"):
+# Bind as Message, made by message-helper (MessageNexusBinary) unless
+# another client is given.
+def bind_message(pid, client="message-helper"):
+    datom = f"Bind.{{ {MESSAGE} {process(pid)} }}"
+    return expect_match(f"Bind {MESSAGE} by {client}", f"{client} {shlex.quote(datom)}", r"Bound\.\S+")
+
+
+def as_message(datom, binary="message-helper"):
     MESSAGE_RUNS[0] += 1
     base = f"/tmp/message-{MESSAGE_RUNS[0]}"
     inner = f'echo $$ > {base}.pid; read -r go < {base}.go; exec {binary} "$1"'
@@ -257,7 +263,7 @@ def as_message(datom, binary="flow"):
     rig(f"(sh -c {shlex.quote(inner)} _ {shlex.quote(datom)} > {base}.reply 2>&1; echo $? > {base}.code) > /dev/null 2>&1 &")
     machine.wait_until_succeeds(f"test -s {base}.pid", timeout=30)
     pid = int(machine.succeed(f"cat {base}.pid").strip())
-    bind(MESSAGE, pid)
+    bind_message(pid)
     machine.succeed(f"echo go > {base}.go")
     machine.wait_until_succeeds(f"test -s {base}.code", timeout=60)
     code = machine.succeed(f"cat {base}.code").strip()

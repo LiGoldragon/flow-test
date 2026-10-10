@@ -12,6 +12,6 @@ flake.lib.flowScenario { inherit pkgs flake system; } {
   target = "mind";
   script = ''
     _, pid = open_pane("message")
-    expect("Bind as Message before Nexus", flow(f"Bind.{{ {MESSAGE} {process(pid)} }}"), "Refused.NotConfigured")
+    expect("Bind as Message before Nexus", f"message-helper {shlex.quote(f'Bind.{{ {MESSAGE} {process(pid)} }}')}", "Refused.NotConfigured")
   '';
 }

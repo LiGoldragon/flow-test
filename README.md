@@ -20,7 +20,10 @@ holds no socket paths, carries full CodexEndpoint and HarnessProfile values
 names MessageNexusBinary after MessageNexusPath, and ends with `Lease`,
 seconds, 60 until it is set; the scenarios still send it first. Lock, Deliver and Release are accepted only from the Message Nexus's own
 process: each runs in a fresh process bound (on the ordinary socket, which
-now carries Bind) as `{ Field message Primary }`, which then execs `flow`.
+now carries Bind) as `{ Field message Primary }` by `message-helper`, which
+then execs `message-helper`. `message-helper` is a copy of the flow client in
+its own store path, named by Configure.Nexus as MessageNexusBinary, so the
+general `flow` client is another binary to the gate.
 
 Test unpushed Flow code with `--override-input flow path:<checkout>`; once it
 lands, `nix flake update flow` and commit the lock.
@@ -123,7 +126,7 @@ expected-failing:
 | flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
 | flow-bind-taken | Bind | Refused.Taken.Address |
 | flow-bind-rebind | Bind | over a gone process: Bound; Current.Awake |
-| flow-lock-message-exec | Lock, Bind | bound Message execs another binary: Lock and Bind Refused.NotMessage |
+| flow-lock-message-exec | Lock, Bind | bound Message execve's the flow client: Lock and Bind Refused.NotMessage (message-test's test 30) |
 | flow-bind-message-wrong-binary | Bind | as Message from another executable: Refused.NotMessage |
 | flow-bind-message-not-configured | Bind | as Message before Configure.Nexus: Refused.NotConfigured |
 | flow-bind-dead | Bind | Refused.Unidentified.Process, dead and reused pid |

@@ -28,6 +28,7 @@ assert builtins.elem target [
 let
   flow = flake.lib.components.flow.forSystem system;
   herdr = flake.lib.components.herdr.forPkgs pkgs;
+  messageHelper = flow.messageHelper pkgs;
   runtime = "/run/user/1000";
   sourceRoot = "/etc/flow-test/source";
   indented = pkgs.lib.concatMapStringsSep "\n" (line: "    " + line) (
@@ -48,6 +49,7 @@ pkgs.testers.runNixOSTest {
 
     environment.systemPackages = [
       flow.package
+      messageHelper
       herdr.package
       pkgs.b3sum
       pkgs.jq
@@ -87,7 +89,7 @@ pkgs.testers.runNixOSTest {
         lease = "LEASE";
       }
     }"""
-    FLOW_CLIENT = "${flow.client}"
+    MESSAGE_HELPER = "${messageHelper}/bin/message-helper"
     ${builtins.readFile ./flow-scenario.py}
 
     def drive():
