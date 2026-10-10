@@ -5,8 +5,10 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-30e8efc4d plus f5a6e9's rulings since (a Lock's Sender must be Awake; Bind as
-Message only from Configure.Nexus's MessageNexusBinary), until the fold lands. The lock: `Lock.{ Sender Recipient }`,
+e876d77da. Three rulings of f5a6e9 that text does not yet carry are tested
+too: a Lock's Sender must be Awake (Asleep, Ended.Address); a Bind as Message
+from another executable is refused NotMessage; and before Configure.Nexus,
+NotConfigured. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -116,6 +118,7 @@ expected-failing:
 | flow-configure-threshold | Configure.Threshold | Configured, twice; update: Configured |
 | flow-configure-module | Configure.Module | Configured, twice; new hash: Configured |
 | flow-module-before-nexus | Configure.Module | recorded unchecked; Launch then Refused.HashMismatch |
+| flow-configure-nexus-no-binary | Configure.Nexus | MessageNexusBinary naming no file: Refused.NoSource.Path |
 | flow-configure-no-source | Configure.Module | Refused.NoSource.Path |
 | flow-configure-hash-mismatch | Configure.Module | Refused.HashMismatch, refused whole |
 | flow-forget | Forget | Forgotten; Launch then Refused.Unknown.Key |

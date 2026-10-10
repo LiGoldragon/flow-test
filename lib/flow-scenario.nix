@@ -83,10 +83,11 @@ pkgs.testers.runNixOSTest {
       flow.nexusPayload {
         inherit runtime sourceRoot;
         home = "/home/alice";
-        messageNexusBinary = flow.client;
+        messageNexusBinary = "MESSAGE_BINARY";
         lease = "LEASE";
       }
     }"""
+    FLOW_CLIENT = "${flow.client}"
     ${builtins.readFile ./flow-scenario.py}
 
     def drive():

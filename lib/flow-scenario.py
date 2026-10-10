@@ -117,8 +117,9 @@ def scenario(drive):
 
 
 # The Nexus's own configuration with a lock lease in seconds.
-def nexus_payload(lease=60):
-    return NEXUS_TEMPLATE.replace("LEASE", str(lease))
+# MessageNexusBinary is the flow client's store path unless another is given.
+def nexus_payload(lease=60, binary=None):
+    return NEXUS_TEMPLATE.replace("LEASE", str(lease)).replace("MESSAGE_BINARY", binary or FLOW_CLIENT)
 
 
 # The Nexus's own configuration, then each layer's model and thresholds,
