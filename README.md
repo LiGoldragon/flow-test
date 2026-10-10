@@ -5,7 +5,7 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-f5e69dd7e. The lock: `Lock.{ Sender Recipient }`,
+c82223e93. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -123,6 +123,7 @@ expected-failing:
 | flow-bind | Bind | Bound.FlowId; Current.Awake; Identified |
 | flow-bind-taken | Bind | Refused.Taken.Address |
 | flow-bind-rebind | Bind | over a gone process: Bound; Current.Awake |
+| flow-lock-message-exec | Lock, Bind | bound Message execs another binary: Lock and Bind Refused.NotMessage |
 | flow-bind-message-wrong-binary | Bind | as Message from another executable: Refused.NotMessage |
 | flow-bind-message-not-configured | Bind | as Message before Configure.Nexus: Refused.NotConfigured |
 | flow-bind-dead | Bind | Refused.Unidentified.Process, dead and reused pid |

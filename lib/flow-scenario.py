@@ -247,10 +247,12 @@ MESSAGE = "{ Field message Primary }"
 MESSAGE_RUNS = [0]
 
 
-def as_message(datom):
+# `binary` is what the bound process execs after the Bind: the flow client
+# unless a scenario gives another.
+def as_message(datom, binary="flow"):
     MESSAGE_RUNS[0] += 1
     base = f"/tmp/message-{MESSAGE_RUNS[0]}"
-    inner = f'echo $$ > {base}.pid; read -r go < {base}.go; exec flow "$1"'
+    inner = f'echo $$ > {base}.pid; read -r go < {base}.go; exec {binary} "$1"'
     rig(f"mkfifo {base}.go")
     rig(f"(sh -c {shlex.quote(inner)} _ {shlex.quote(datom)} > {base}.reply 2>&1; echo $? > {base}.code) > /dev/null 2>&1 &")
     machine.wait_until_succeeds(f"test -s {base}.pid", timeout=30)
