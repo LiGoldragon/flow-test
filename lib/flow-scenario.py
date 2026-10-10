@@ -136,8 +136,10 @@ def module_hash(path="psyche-skills/vision/flow.md"):
     return rig(f"b3sum --no-names {SOURCE_ROOT}/{path}")
 
 
+# Configure.Module, the key written as the pair as the design's example
+# writes it: Configure.Module.{ { Vision flow } { Repository Hash Path } }.
 def module_payload(digest, path="vision/flow.md", topic="flow"):
-    return f"Configure.Module.{{ Vision {topic} {{ psyche-skills {digest} {path} }} }}"
+    return f"Configure.Module.{{ {{ Vision {topic} }} {{ psyche-skills {digest} {path} }} }}"
 
 
 def open_pane(label):

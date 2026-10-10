@@ -5,12 +5,13 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-e846c2ca1, with f5a6e9's later ruling on the lock: `Lock.{ Sender Recipient }`,
+9613a5738, and f5a6e9's later rulings where they go past it. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
 `NoneAbove`. The Lock is `{ Sender Address Until }`. Deliver is `Deliver.{ Lock Request }`,
-the sender inside the lock. A Key is the pair, `{ Vision flow }`. Unknown is one refusal carrying a
+the sender inside the lock. A Key is the pair, `{ Vision flow }`, also in `Configure.Module.{ { Vision
+flow } { Repository Hash Path } }` as the design's example writes it. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `Refused.Unknown.Address.{ Mind ghost Secondary }`. Configure.Nexus
 ends with `Lease`, seconds, 60 by default. Where the design left a case open,

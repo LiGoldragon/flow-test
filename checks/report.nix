@@ -6,6 +6,7 @@
 {
   pkgs,
   flake,
+  inputs,
   system,
   ...
 }:
@@ -17,6 +18,9 @@ let
 in
 pkgs.runCommand "report" { } ''
   {
+    echo "Written to Flow's design at Primary ${flake.lib.design} (flows/f5a6e9/reports/flow-buildable-design.md), with f5a6e9's later rulings."
+    echo "Flow pinned at ${inputs.flow.rev}."
+    echo
     echo "passing:"
     grep -h ': passing$' ${outcomes} | sed 's/^/  /' || true
     echo
