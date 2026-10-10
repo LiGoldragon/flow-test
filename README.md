@@ -5,10 +5,7 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-e876d77da. Three rulings of f5a6e9 that text does not yet carry are tested
-too: a Lock's Sender must be Awake (Asleep, Ended.Address); a Bind as Message
-from another executable is refused NotMessage; and before Configure.Nexus,
-NotConfigured. The lock: `Lock.{ Sender Recipient }`,
+f5e69dd7e. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
