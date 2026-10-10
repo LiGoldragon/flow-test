@@ -1,7 +1,7 @@
 # Flow: the Flow Nexus and its `flow` / `flow-meta` clients, taken from the
 # `flow` input. The Nexus starts with no arguments; sockets under
-# XDG_RUNTIME_DIR, store under HOME. Every request is written as Flow's
-# design gives it (f5a6e9 flow-buildable-design at Primary c5a3654bc).
+# XDG_RUNTIME_DIR, store under HOME, all three named by its start command. Every request is written as Flow's
+# design gives it (f5a6e9 flow-buildable-design at Primary a5b2c27d4).
 { inputs }:
 {
   forSystem = system: rec {
@@ -33,8 +33,13 @@
         cp ${client} $out/bin/message-helper
       '';
 
-    # The Nexus's start command: one datom naming its two listening sockets.
-    startArgument = runtime: "Start.{ ${runtime}/${ordinarySocket} ${runtime}/${metaSocket} }";
+    # Relative to HOME: the store, under the Nexus's own state directory.
+    store = ".local/state/flow/flow.sema";
+
+    # The Nexus's start command: one datom naming its two listening sockets
+    # and its store, Start.{ OrdinarySocketPath MetaSocketPath StorePath }.
+    startArgument =
+      runtime: home: "Start.{ ${runtime}/${ordinarySocket} ${runtime}/${metaSocket} ${home}/${store} }";
 
     # Configure.Nexus.{ SourceRoot StableCodex NextCodex HarnessProfiles
     # MetaAspects MessageNexusPath MessageNexusBinary Lease }, with full values in the shapes

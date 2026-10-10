@@ -5,7 +5,7 @@ and drive it through its real `flow` and `flow-meta` clients. This repository
 holds no component source: `flow` is a flake input whose `nixpkgs` follows
 this flake's. Every request is written as Flow's design gives it:
 `flows/f5a6e9/reports/flow-buildable-design.md` at Primary revision
-c5a3654bc. The lock: `Lock.{ Sender Recipient }`,
+a5b2c27d4. The lock: `Lock.{ Sender Recipient }`,
 written `Lock.{ { Psyche nexus Secondary } Address.{ Mind nexus Secondary } }`
 or `Lock.{ { Mind nexus Secondary } Up }`; Flow resolves Up relative to the
 Sender and answers `Locked.Lock` carrying the resolved Address, or refuses
@@ -17,7 +17,8 @@ Configuration. A Model is
 Replies are compared in datom's canonical print. Unknown is one refusal carrying a
 choice, `Refused.Unknown.[ Address Lock FlowId Key ]`, written e.g.
 `Refused.Unknown.Address.{ Mind ghost Secondary }`. The Nexus starts as
-`flow-nexus 'Start.{ <ordinary socket> <meta socket> }'`. Configure.Nexus
+`flow-nexus 'Start.{ <ordinary socket> <meta socket> <store> }'`, the store under
+`~/.local/state/flow`. Configure.Nexus
 holds no socket paths, carries full CodexEndpoint and HarnessProfile values
 (meta-signal-flow 88f3759's shapes; MetaAspects as Vector<FlowAspect>),
 names MessageNexusBinary after MessageNexusPath, and ends with `Lease`,
@@ -81,7 +82,9 @@ expected-failing:
 | flow-end-unknown | End | Refused.Unknown.Address |
 | flow-end-ended | End | Refused.Ended.Address |
 | flow-end-held | End | Refused.Held.Lock; Ended after Release |
-| flow-start | start command | Start.{ ordinary meta } binds both named sockets |
+| flow-start | start command | Start.{ ordinary meta store } binds both sockets, opens the store there |
+| flow-restart | start command | restart on its own store: Metaflows lists the bound metaflow |
+| flow-start-foreign-store | start command | random bytes at StorePath: Refused.Store.{ Path Reason }, non-zero exit |
 | flow-current | Current | Unknown, Awake.FlowId, Asleep, Ended |
 | flow-lock-address | Lock | Locked.{ Sender Address Until }, Until 60 s away |
 | flow-lock-up | Lock | Up resolved from the Sender to { Mind nexus Primary } |

@@ -62,7 +62,7 @@ pkgs.testers.runNixOSTest {
         wantedBy = [ "default.target" ];
         unitConfig.ConditionUser = "alice";
         environment.RUST_LOG = "debug";
-        serviceConfig.ExecStart = "${flow.nexus} \"${flow.startArgument runtime}\"";
+        serviceConfig.ExecStart = "${flow.nexus} \"${flow.startArgument runtime "/home/alice"}\"";
       };
       herdr = {
         wantedBy = [ "default.target" ];

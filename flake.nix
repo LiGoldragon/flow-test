@@ -1,5 +1,5 @@
 {
-  description = "flow-test — acceptance scenarios that run the real Flow Nexus in a virtual machine, written to Flow's design (f5a6e9 flow-buildable-design at Primary c5a3654bc).";
+  description = "flow-test — acceptance scenarios that run the real Flow Nexus in a virtual machine, written to Flow's design (f5a6e9 flow-buildable-design at Primary a5b2c27d4).";
 
   inputs = {
     nixpkgs.url = "github:LiGoldragon/nixpkgs?ref=main";

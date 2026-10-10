@@ -63,7 +63,7 @@ pkgs.writeShellApplication {
     cp -r ${../fixtures/flow/source}/. "$root/source/"
     SHELL="${pkgs.bashInteractive}/bin/bash" herdr server > "$root/herdr.log" 2>&1 &
     pids+=($!)
-    RUST_LOG=debug ${flow.nexus} "Start.{ $XDG_RUNTIME_DIR/${flow.ordinarySocket} $XDG_RUNTIME_DIR/${flow.metaSocket} }" 2> "$root/flow-nexus.log" &
+    RUST_LOG=debug ${flow.nexus} "${flow.startArgument "$XDG_RUNTIME_DIR" "$HOME"}" 2> "$root/flow-nexus.log" &
     pids+=($!)
 
     for socket in ${flow.ordinarySocket} ${flow.metaSocket}; do
@@ -143,6 +143,8 @@ pkgs.writeShellApplication {
     }
 
     configureAll() {
+      # The store the start command named.
+      [ -e "$HOME/${flow.store}" ] || { echo "no store at $HOME/${flow.store}" >&2; return 1; }
       expect "Configure.Nexus" Configured flow-meta "${
         flow.nexusPayload {
           runtime = "$XDG_RUNTIME_DIR";
