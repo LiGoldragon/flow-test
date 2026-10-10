@@ -95,6 +95,7 @@ expected-failing:
 | flow-lock-unknown | Lock | Refused.Unknown.Address |
 | flow-lock-unknown-sender | Lock | Refused.Unknown.Address, the sender's address |
 | flow-lock-asleep-recipient | Lock | Asleep recipient: Locked |
+| flow-lock-asleep-no-layer | Lock | Asleep recipient, no Model for its layer: Refused.NoLayer |
 | flow-lock-ended | Lock | Refused.Ended.Address |
 | flow-lock-asleep-sender | Lock | Sender Asleep: Refused.Asleep |
 | flow-lock-ended-sender | Lock | Sender Ended: Refused.Ended.Address |
@@ -103,6 +104,7 @@ expected-failing:
 | flow-deliver-awake | Deliver | Delivered; reaches the pane; the lock ends |
 | flow-deliver-asleep | Deliver | Notice: Queued; Current.Asleep |
 | flow-deliver-ended-lapsed | Deliver | lock lapsed, recipient then ended: Refused.Lapsed |
+| flow-deliver-forgotten-module | Deliver | module forgotten after the Lock: Refused.Unknown.Key |
 | flow-deliver-lapsed | Deliver | Refused.Lapsed |
 | flow-deliver-unknown-lock | Deliver | Refused.Unknown.Lock |
 | flow-release | Release | Released; Lock granted again |
