@@ -2,13 +2,8 @@
 # granting: with no Model for the recipient's layer (only Primary has one),
 # the Lock is refused NoLayer.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-asleep-no-layer";
   target = "mind";
   script = ''

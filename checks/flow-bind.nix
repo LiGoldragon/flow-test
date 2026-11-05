@@ -1,13 +1,8 @@
 # Bind.{ Address Process } of a running shell: Bound.FlowId; the metaflow
 # is then Awake with that FlowId, and the shell identifies as its address.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind";
   target = "mind";
   script = ''

@@ -2,13 +2,8 @@
 # the resolved { Mind nexus Primary }: Refused.Unknown.Address, carrying the
 # resolved address.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-up-unknown";
   target = "mind";
   script = ''

@@ -1,13 +1,8 @@
 # Observe.Agent.FlowId for a bound flow: Observed.Agent.[ Working Idle Done Absent ], Herdr's
 # agent state of its pane.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-observe-agent";
   target = "mind";
   script = ''

@@ -4,13 +4,8 @@
 # when it is first composed into a Launch: that Launch is refused
 # HashMismatch.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-module-before-nexus";
   target = "mind";
   script = ''

@@ -1,13 +1,8 @@
 # Lock.{ Sender Up } with Sender { Mind nexus Primary }, the top of its
 # aspect: Refused.NoneAbove.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-none-above";
   target = "mind";
   script = ''

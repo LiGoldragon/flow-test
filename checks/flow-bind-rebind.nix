@@ -2,13 +2,8 @@
 # time no longer name a live process) replaces the binding: Bound.FlowId;
 # Current is then Awake with the new FlowId.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind-rebind";
   target = "mind";
   script = ''

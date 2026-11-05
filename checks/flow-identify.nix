@@ -1,13 +1,8 @@
 # Identify.Process of a bound pane's shell answers its metaflow's address;
 # so does a process descending from that shell (Flow walks the ancestors).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-identify";
   target = "mind";
   script = ''

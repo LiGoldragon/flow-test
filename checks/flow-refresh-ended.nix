@@ -1,12 +1,7 @@
 # Refresh of an Ended metaflow: Refused.Ended.{ Mind refresh Secondary }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-refresh-ended";
   target = "mind";
   script = ''

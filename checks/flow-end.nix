@@ -1,13 +1,8 @@
 # End of an awake metaflow: Ended; Current is then Current.Ended and
 # Metaflows lists it Ended, its flow's id moved into Past, its queue empty.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-end";
   target = "mind";
   script = ''

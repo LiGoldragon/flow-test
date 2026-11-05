@@ -2,13 +2,8 @@
 # model is configured and the launch names no module, so only the Nexus's
 # configuration is missing.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-launch-not-configured";
   target = "mind";
   script = ''

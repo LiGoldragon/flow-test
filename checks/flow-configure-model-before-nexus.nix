@@ -1,13 +1,8 @@
 # Configure.Model on a fresh Nexus, before any Configure.Nexus: Configured;
 # Configure.Nexus after it: Configured.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configure-model-before-nexus";
   target = "mind";
   script = ''

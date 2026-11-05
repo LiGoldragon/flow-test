@@ -2,13 +2,8 @@
 # order: one awake (Awake.FlowId, the FlowId Bind answered) and one asleep,
 # its closed pane's FlowId moved into Past.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-metaflows";
   target = "mind";
   script = ''

@@ -2,13 +2,8 @@
 # is then accepted (no lock is held), and a Deliver under the lapsed lock
 # is refused Lapsed, not Ended.Address.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-deliver-ended-lapsed";
   target = "mind";
   script = ''

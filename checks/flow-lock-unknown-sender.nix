@@ -1,13 +1,8 @@
 # Lock whose Sender names no metaflow:
 # Refused.Unknown.Address, carrying the sender's address.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-unknown-sender";
   target = "mind";
   script = ''

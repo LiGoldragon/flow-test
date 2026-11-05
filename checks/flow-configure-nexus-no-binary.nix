@@ -1,13 +1,8 @@
 # Configure.Nexus whose MessageNexusBinary resolves to no file:
 # Refused.NoSource.Path, carrying that path.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configure-nexus-no-binary";
   target = "mind";
   script = ''

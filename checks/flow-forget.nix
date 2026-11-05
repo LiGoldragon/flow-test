@@ -1,13 +1,8 @@
 # Forget.{ Vision flow } of a registered module: Forgotten; a Launch
 # naming it is then Refused.Unknown.Key.{ Vision flow }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-forget";
   target = "mind";
   script = ''

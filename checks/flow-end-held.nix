@@ -1,13 +1,8 @@
 # End while a lock is held: Refused.Held.Lock; after Release, End proceeds:
 # Ended.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-end-held";
   target = "mind";
   script = ''

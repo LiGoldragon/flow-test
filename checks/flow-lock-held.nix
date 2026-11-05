@@ -2,13 +2,8 @@
 # lock. Once the clock passes its Until, the lapsed lock is released by Flow
 # and a Lock is granted again.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-held";
   target = "mind";
   script = ''

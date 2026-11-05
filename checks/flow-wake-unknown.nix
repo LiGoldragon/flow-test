@@ -1,13 +1,8 @@
 # Wake of a metaflow that does not exist:
 # Refused.Unknown.Address.{ Mind ghost Secondary }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-wake-unknown";
   target = "mind";
   script = ''

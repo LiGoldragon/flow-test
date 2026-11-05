@@ -1,13 +1,8 @@
 # Launch naming a module the registry does not hold:
 # Refused.Unknown.Key.{ Vision ghost }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-launch-unknown-key";
   target = "mind";
   script = ''

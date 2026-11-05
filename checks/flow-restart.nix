@@ -2,13 +2,8 @@
 # the store it created and continues from it, so a metaflow bound before
 # the restart is listed after it, Awake with the same FlowId.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-restart";
   target = "mind";
   script = ''

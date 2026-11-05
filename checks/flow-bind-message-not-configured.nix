@@ -1,13 +1,8 @@
 # Bind under { Field message Primary } before any Configure.Nexus:
 # Refused.NotConfigured.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind-message-not-configured";
   target = "mind";
   script = ''

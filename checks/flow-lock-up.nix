@@ -2,13 +2,8 @@
 # relative to the Sender, the same topic one layer above within its aspect,
 # and answers Locked.{ Sender { Mind nexus Primary } Until }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-up";
   target = "mind";
   script = ''

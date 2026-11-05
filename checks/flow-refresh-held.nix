@@ -1,12 +1,7 @@
 # Refresh while a lock is held: Refused.Held.Lock, carrying the held lock.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-refresh-held";
   target = "mind";
   script = ''

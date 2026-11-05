@@ -1,12 +1,7 @@
 # Configuration on a fresh Nexus, before any Configure.Nexus: Unconfigured.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configuration-unconfigured";
   target = "mind";
   script = ''

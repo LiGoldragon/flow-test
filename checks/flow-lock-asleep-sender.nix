@@ -1,13 +1,8 @@
 # Lock whose Sender is an Asleep metaflow: Refused.Asleep (a Lock's Sender
 # must be Awake).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-asleep-sender";
   target = "mind";
   script = ''

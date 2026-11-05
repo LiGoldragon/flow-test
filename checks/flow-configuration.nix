@@ -3,13 +3,8 @@
 # Vector<Module> }, the stored state whole, in datom's canonical print
 # (entries in the order sent, the Module unchecked: false).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configuration";
   target = "mind";
   script = ''

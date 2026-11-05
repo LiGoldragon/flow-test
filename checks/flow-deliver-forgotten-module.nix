@@ -5,13 +5,8 @@
 # Deliver of a Notice is Queued as usual (a notice wakes nothing) and the
 # metaflow stays Asleep.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-deliver-forgotten-module";
   target = "mind";
   script = ''

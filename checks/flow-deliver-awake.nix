@@ -4,13 +4,8 @@
 # only its words are looked for). The Deliver ends the lock: a second
 # Deliver under it is Refused.Unknown.Lock, and a new Lock is granted.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-deliver-awake";
   target = "mind";
   script = ''

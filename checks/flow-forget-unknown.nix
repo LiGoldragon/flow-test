@@ -2,13 +2,8 @@
 # Refused.Unknown.{ Vision ghost } (the meta socket's one Unknown, carrying
 # the Key bare).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-forget-unknown";
   target = "mind";
   script = ''

@@ -3,13 +3,8 @@
 # Configured, and the key stays registered: a Launch naming it is refused
 # Awake (the metaflow is bound), never Unknown.Key.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configure-module";
   target = "mind";
   script = ''

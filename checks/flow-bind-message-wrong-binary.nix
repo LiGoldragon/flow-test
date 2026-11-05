@@ -2,13 +2,8 @@
 # Configure.Nexus's MessageNexusBinary (the general flow client, while
 # MessageNexusBinary names message-helper): Refused.NotMessage.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind-message-wrong-binary";
   target = "mind";
   script = ''

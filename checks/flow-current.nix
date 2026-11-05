@@ -2,13 +2,8 @@
 # Awake.FlowId (the FlowId Bind answered) for a bound metaflow, Asleep once
 # its pane is closed, Ended after End.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-current";
   target = "mind";
   script = ''

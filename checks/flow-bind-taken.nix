@@ -1,13 +1,8 @@
 # Bind of a second process to an awake metaflow:
 # Refused.Taken.{ Mind nexus Secondary }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind-taken";
   target = "mind";
   script = ''

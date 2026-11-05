@@ -1,12 +1,7 @@
 # Stop of a FlowId Flow does not hold: Refused.Unknown.FlowId.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-stop-unknown";
   target = "mind";
   script = ''

@@ -2,13 +2,8 @@
 # Stop, which the hook reports (Report.{ FlowId Stopped }), so the request
 # then reaches the pane.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-wake-awake";
   target = "mind";
   script = ''

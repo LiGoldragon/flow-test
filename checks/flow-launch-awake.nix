@@ -1,13 +1,8 @@
 # Launch of an awake metaflow: Refused.Awake.FlowId, carrying its current
 # flow (the FlowId Bind answered).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-launch-awake";
   target = "mind";
   script = ''

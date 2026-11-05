@@ -3,13 +3,8 @@
 # untouched) a Deliver under it is Refused.Lapsed and a new Lock is
 # granted.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-lease";
   target = "mind";
   script = ''

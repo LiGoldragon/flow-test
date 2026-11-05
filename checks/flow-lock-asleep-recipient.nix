@@ -1,13 +1,8 @@
 # Lock to an Asleep recipient is granted: Locked.{ Sender Address Until }
 # carrying the recipient's address.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-asleep-recipient";
   target = "mind";
   script = ''

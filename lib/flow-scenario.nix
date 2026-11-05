@@ -1,7 +1,8 @@
-# The frame of a pure scenario: one NixOS virtual machine with user `alice`
-# (uid 1000, lingering) and two of her user services started with no
-# arguments: the real Flow Nexus and a headless Herdr server whose panes are
-# plain shells. The scenario supplies its name, its target, and its drive
+# The frame of a pure scenario: one NixOS virtual machine with the shared test
+# user and two user services started with no arguments: the real Flow Nexus
+# and a headless Herdr server whose panes are
+# plain shells. User identity and paths come from components.testMachine. The
+# scenario supplies its name, its target, and its drive
 # (Python, using the helpers of flow-scenario.py).
 #
 # target = "pass": the drive must meet every expectation.
@@ -15,6 +16,7 @@
   pkgs,
   flake,
   system,
+  ...
 }:
 {
   name,
@@ -28,8 +30,9 @@ assert builtins.elem target [
 let
   flow = flake.lib.components.flow.forSystem system;
   herdr = flake.lib.components.herdr.forPkgs pkgs;
+  testMachine = flake.lib.components.testMachine;
+  inherit (testMachine) user;
   messageHelper = flow.messageHelper pkgs;
-  runtime = "/run/user/1000";
   sourceRoot = "/etc/flow-test/source";
   indented = pkgs.lib.concatMapStringsSep "\n" (line: "    " + line) (
     pkgs.lib.splitString "\n" script
@@ -41,11 +44,7 @@ pkgs.testers.runNixOSTest {
   nodes.machine = _: {
     virtualisation.memorySize = 2048;
 
-    users.users.alice = {
-      isNormalUser = true;
-      uid = 1000;
-      linger = true;
-    };
+    users.users.${user.name} = testMachine.userAccount;
 
     environment.systemPackages = [
       flow.package
@@ -59,15 +58,13 @@ pkgs.testers.runNixOSTest {
 
     systemd.user.services = {
       flow-nexus = {
-        wantedBy = [ "default.target" ];
-        unitConfig.ConditionUser = "alice";
+        inherit (testMachine.userService) wantedBy unitConfig;
         environment.RUST_LOG = "debug";
-        serviceConfig.ExecStart = "${flow.nexus} \"${flow.startArgument runtime "/home/alice"}\"";
+        serviceConfig.ExecStart = "${flow.nexus} \"${flow.startArgument user.runtime user.home}\"";
       };
       herdr = {
-        wantedBy = [ "default.target" ];
-        unitConfig.ConditionUser = "alice";
-        path = [ "/run/current-system/sw" ];
+        inherit (testMachine.userService) wantedBy unitConfig;
+        path = [ testMachine.systemPath ];
         environment.SHELL = "${pkgs.bashInteractive}/bin/bash";
         serviceConfig.ExecStart = "${herdr.bin} server";
       };
@@ -77,14 +74,17 @@ pkgs.testers.runNixOSTest {
   testScript = ''
     NAME = "${name}"
     TARGET = "${target}"
-    RUNTIME = "${runtime}"
+    USER_NAME = "${user.name}"
+    USER_UID = ${toString user.uid}
+    USER_HOME = "${user.home}"
+    RUNTIME = "${user.runtime}"
     SOURCE_ROOT = "${sourceRoot}"
     LAYERS = ${builtins.toJSON flow.layers}
     MODEL = "${flake.lib.cheapestModel.claude}"
     NEXUS_TEMPLATE = """${
       flow.nexusPayload {
-        inherit runtime sourceRoot;
-        home = "/home/alice";
+        inherit sourceRoot;
+        inherit (user) home runtime;
         messageNexusBinary = "MESSAGE_BINARY";
         lease = "LEASE";
       }

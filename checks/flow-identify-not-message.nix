@@ -2,13 +2,8 @@
 # Identify from the general flow client (not Message, in no metaflow) is
 # answered Identified.Address, never NotMessage.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-identify-not-message";
   target = "mind";
   script = ''

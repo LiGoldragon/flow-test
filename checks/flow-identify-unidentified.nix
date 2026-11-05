@@ -2,13 +2,8 @@
 # with another start time (a reused pid): each Refused.Unidentified.Process,
 # carrying the process asked about.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-identify-unidentified";
   target = "mind";
   script = ''

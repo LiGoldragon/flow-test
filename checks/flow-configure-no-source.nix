@@ -1,13 +1,8 @@
 # Configure.Module whose path names no file under the source:
 # Refused.NoSource.Path.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configure-no-source";
   target = "mind";
   script = ''

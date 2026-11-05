@@ -1,13 +1,8 @@
 # Deliver of a Notice under the lock to an Asleep metaflow: Queued (a
 # notice wakes nothing); Current stays Asleep and the Queue holds it.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-deliver-asleep";
   target = "mind";
   script = ''

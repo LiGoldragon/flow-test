@@ -1,13 +1,8 @@
 # Stop.FlowId reaps a bound flow with no successor: Stopped, and the
 # metaflow is left Asleep (only End ends it).
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-stop";
   target = "mind";
   script = ''

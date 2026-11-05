@@ -2,13 +2,8 @@
 # Refused.HashMismatch, refused whole: a Launch naming the module is then
 # Refused.Unknown.Key.{ Vision flow }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-configure-hash-mismatch";
   target = "mind";
   script = ''

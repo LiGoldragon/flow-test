@@ -2,13 +2,8 @@
 # to the awake { Mind nexus Secondary }: Locked.Lock, the Lock
 # { Sender Address Until } with Until the default lease (60 seconds) away.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-address";
   target = "mind";
   script = ''

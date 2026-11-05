@@ -4,13 +4,8 @@
 # so its Lock is refused NotMessage, and a following Bind as Message from
 # that binary is refused NotMessage too.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-message-exec";
   target = "mind";
   script = ''

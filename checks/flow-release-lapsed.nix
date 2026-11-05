@@ -1,12 +1,7 @@
 # Release of a lapsed lock: Refused.Lapsed.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-release-lapsed";
   target = "mind";
   script = ''

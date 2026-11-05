@@ -1,4 +1,4 @@
-# Helpers every pure scenario shares. Commands run as alice inside the
+# Helpers every pure scenario shares. Commands run as the configured user inside the
 # machine. A request goes to the Nexus through the real `flow` (ordinary
 # socket) or `flow-meta` (meta socket) client, one inline datom each; the
 # reply is the client's whole output.
@@ -11,7 +11,6 @@ import os
 import re
 import shlex
 
-FIXTURES = "/etc/flow-test"
 PANE_RUNS = [0]
 STEPS = []
 
@@ -20,16 +19,16 @@ class Miss(Exception):
     pass
 
 
-def as_alice(command):
+def as_user(command):
     inner = f"export XDG_RUNTIME_DIR={RUNTIME}; {command}"
-    return "su -l alice -c " + shlex.quote(inner)
+    return f"su -l {shlex.quote(USER_NAME)} -c " + shlex.quote(inner)
 
 
 # A command bounded at 30 seconds (a hung client answers exit 124); its
 # standard error joins its reply.
 def run(command):
     bounded = f"timeout 30 sh -c {shlex.quote(command)} 2>&1"
-    status, out = machine.execute(as_alice(bounded), timeout=60)
+    status, out = machine.execute(as_user(bounded), timeout=60)
     return status, out.strip()
 
 
@@ -75,10 +74,10 @@ def expect_true(label, met, detail):
 
 
 def start():
-    machine.wait_for_unit("user@1000.service")
+    machine.wait_for_unit(f"user@{USER_UID}.service")
     for unit in ["flow-nexus.service", "herdr.service"]:
-        machine.wait_for_unit(unit, user="alice")
-    machine.wait_until_succeeds(as_alice("herdr workspace list"), timeout=60)
+        machine.wait_for_unit(unit, user=USER_NAME)
+    machine.wait_until_succeeds(as_user("herdr workspace list"), timeout=60)
     for socket in ["flow/flow.sock", "flow/flow-meta.sock"]:
         status, _ = machine.execute(f"timeout 30 sh -c 'until test -S {RUNTIME}/{socket}; do sleep 0.2; done'")
         bound = machine.succeed(f"ls -la {RUNTIME}/flow 2>&1 || true")
@@ -174,7 +173,7 @@ def module_payload(digest, path="vision/flow.md", topic="flow"):
 
 
 def open_pane(label):
-    out = rig(f"herdr workspace create --cwd /home/alice --label {label} --no-focus")
+    out = rig(f"herdr workspace create --cwd {shlex.quote(USER_HOME)} --label {label} --no-focus")
     pane = json.loads(out)["result"]["root_pane"]["pane_id"]
     out = rig(f"herdr pane process-info --pane {pane}")
     pid = json.loads(out)["result"]["process_info"]["shell_pid"]

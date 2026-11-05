@@ -2,13 +2,8 @@
 # it (the waking rule), each answers Queued, Current stays Asleep, and the
 # metaflow's Queue holds both, oldest first, as Metaflows lists it.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-wake-queued";
   target = "mind";
   script = ''

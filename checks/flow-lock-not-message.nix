@@ -2,13 +2,8 @@
 # process, while a process is bound as Message by message-helper):
 # Refused.NotMessage.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-not-message";
   target = "mind";
   script = ''

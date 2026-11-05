@@ -1,13 +1,8 @@
 # Deliver under a lock whose Until has passed: Refused.Lapsed, and the
 # recipient's pane never shows the request.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-deliver-lapsed";
   target = "mind";
   script = ''

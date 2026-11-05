@@ -1,13 +1,8 @@
 # Bind of a process that has exited, and of a live pid with another start
 # time (a reused pid): each Refused.Unidentified.Process.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-bind-dead";
   target = "mind";
   script = ''

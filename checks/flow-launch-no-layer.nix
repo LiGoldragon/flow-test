@@ -2,13 +2,8 @@
 # Refused.NoLayer. The launch's one module is registered, so only the
 # layer is missing.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-launch-no-layer";
   target = "mind";
   script = ''

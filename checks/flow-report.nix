@@ -2,13 +2,8 @@
 # event of signal-flow (Started, ToolUsed.String, ContextMeasured.{ Tokens
 # Window }, Stopped) answers Reported.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-report";
   target = "mind";
   script = ''

@@ -1,13 +1,8 @@
 # Lock whose Sender is an Ended metaflow:
 # Refused.Ended.{ Psyche nexus Secondary }.
 # Target: mind.
-{
-  pkgs,
-  flake,
-  system,
-  ...
-}:
-flake.lib.flowScenario { inherit pkgs flake system; } {
+args@{ flake, ... }:
+flake.lib.flowScenario args {
   name = "flow-lock-ended-sender";
   target = "mind";
   script = ''

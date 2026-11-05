@@ -53,6 +53,7 @@ expected-failing:
     lib/default.nix              flake.lib: components, flowScenario, cheapestModel
     lib/components/flow.nix      the Flow Nexus and clients: paths, payloads
     lib/components/herdr.nix     headless Herdr
+    lib/components/test-machine.nix  shared VM user, paths and service frame
     lib/flow-scenario.nix        the frame: one VM, two user services, the target
     lib/flow-scenario.py         the frame's helpers: configure, panes, Bind, Lock
     checks/herdr.nix             the rig: headless Herdr in the VM
